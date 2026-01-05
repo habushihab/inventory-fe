@@ -1,0 +1,587 @@
+<app-layout currentRoute="/assets">
+  <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+    <div class="max-w-7xl mx-auto flex flex-col gap-6">
+      <!-- Page Header -->
+      <div class="flex items-center justify-between">
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Assets</h1>
+        <button 
+          *ngIf="canCreate"
+          type="button"
+          (click)="openCreateModal()"
+          class="inline-flex items-center gap-2 justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-600 transition-all">
+          <span class="material-symbols-outlined text-[20px]">add</span>
+          <span class="hidden sm:inline">Add New Asset</span>
+          <span class="sm:hidden">Add</span>
+        </button>
+      </div>
+      <!-- Search and Filters -->
+      <div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row gap-4">
+          <div class="flex-1">
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <span class="material-symbols-outlined text-slate-400 text-[20px]">search</span>
+              </div>
+              <input 
+                type="text"
+                [(ngModel)]="searchTerm"
+                (keyup.enter)="onSearch()"
+                placeholder="Search by asset ID, brand, model, serial number..."
+                class="block w-full rounded-lg border-0 bg-slate-100 dark:bg-slate-800 py-2 pl-10 pr-4 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-slate-900 transition-all text-sm"
+              />
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <select 
+              [(ngModel)]="searchRequest.category"
+              (change)="onFilterChange()"
+              class="rounded-lg border-0 bg-slate-100 dark:bg-slate-800 py-2 px-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary text-sm"
+            >
+              <option [ngValue]="undefined">All Categories</option>
+              <option *ngFor="let key of categoryKeys" [ngValue]="assetCategories[key]">{{ key }}</option>
+            </select>
+            <select 
+              [(ngModel)]="searchRequest.status"
+              (change)="onFilterChange()"
+              class="rounded-lg border-0 bg-slate-100 dark:bg-slate-800 py-2 px-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary text-sm"
+            >
+              <option [ngValue]="undefined">All Statuses</option>
+              <option *ngFor="let key of statusKeys" [ngValue]="assetStatuses[key]">{{ key }}</option>
+            </select>
+            <button 
+              type="button"
+              (click)="onSearch()"
+              class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium">
+              Search
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Assets Table -->
+      <div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-slate-50 dark:bg-slate-800/50">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Asset ID</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Brand/Model</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Category</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Location</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Assigned To</th>
+                <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+              <tr *ngIf="isLoading">
+                <td colspan="7" class="px-4 py-8 text-center text-slate-400">Loading...</td>
+              </tr>
+              <tr *ngIf="!isLoading && assets.length === 0">
+                <td colspan="7" class="px-4 py-8 text-center text-slate-400">No assets found</td>
+              </tr>
+              <tr *ngFor="let asset of assets" class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-white">{{ asset.assetId }}</td>
+                <td class="px-4 py-3 text-sm text-slate-900 dark:text-white">{{ asset.brand }} {{ asset.model }}</td>
+                <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{{ getCategoryName(asset.category) }}</td>
+                <td class="px-4 py-3">
+                  <span class="px-2 py-1 text-xs font-medium rounded-full" [ngClass]="getStatusClass(asset.status)">
+                    {{ getStatusName(asset.status) }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">
+                  {{ asset.location?.fullLocation || '-' }}
+                </td>
+                <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">
+                  {{ asset.currentAssignment?.employeeName || '-' }}
+                </td>
+                <td class="px-4 py-3 text-right text-sm font-medium">
+                  <div class="flex items-center justify-end gap-2">
+                    <button 
+                      type="button"
+                      (click)="openViewModal(asset)"
+                      class="text-primary hover:text-blue-600 transition-colors">
+                      <span class="material-symbols-outlined text-[20px]">visibility</span>
+                    </button>
+                    <button 
+                      *ngIf="canEdit && asset.status === assetStatuses.Available"
+                      type="button"
+                      (click)="openAssignModal(asset)"
+                      class="text-green-600 hover:text-green-700 transition-colors">
+                      <span class="material-symbols-outlined text-[20px]">person_add</span>
+                    </button>
+                    <button 
+                      *ngIf="canEdit"
+                      type="button"
+                      (click)="openEditModal(asset)"
+                      class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+                      <span class="material-symbols-outlined text-[20px]">edit</span>
+                    </button>
+                    <button 
+                      *ngIf="canDelete"
+                      type="button"
+                      (click)="onDelete(asset)"
+                      class="text-red-600 hover:text-red-700 transition-colors">
+                      <span class="material-symbols-outlined text-[20px]">delete</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Pagination -->
+        <div *ngIf="totalCount > (searchRequest.pageSize || 20)" class="px-4 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+          <div class="text-sm text-slate-500 dark:text-slate-400">
+            Showing {{ ((searchRequest.page || 1) - 1) * (searchRequest.pageSize || 20) + 1 }} to {{ Math.min((searchRequest.page || 1) * (searchRequest.pageSize || 20), totalCount) }} of {{ totalCount }} assets
+          </div>
+          <div class="flex gap-2">
+            <button 
+              type="button"
+              (click)="onPageChange((searchRequest.page || 1) - 1)"
+              [disabled]="(searchRequest.page || 1) === 1"
+              class="px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+              Previous
+            </button>
+            <button 
+              type="button"
+              (click)="onPageChange((searchRequest.page || 1) + 1)"
+              [disabled]="(searchRequest.page || 1) * (searchRequest.pageSize || 20) >= totalCount"
+              class="px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- Create Modal -->
+<div *ngIf="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+  <div class="bg-white dark:bg-surface-dark rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+      <h2 class="text-xl font-bold text-slate-900 dark:text-white">Create New Asset</h2>
+      <button type="button" (click)="closeCreateModal()" class="text-slate-400 hover:text-slate-600">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <form [formGroup]="assetForm" (ngSubmit)="onCreateSubmit()" class="p-6 space-y-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Barcode</label>
+          <input type="text" formControlName="barcode" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Category *</label>
+          <select formControlName="category" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary">
+            <option *ngFor="let key of categoryKeys" [value]="assetCategories[key]">{{ key }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status *</label>
+          <select formControlName="status" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary">
+            <option *ngFor="let key of statusKeys" [value]="assetStatuses[key]">{{ key }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Brand *</label>
+          <input type="text" formControlName="brand" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Model *</label>
+          <input type="text" formControlName="model" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Serial Number</label>
+          <input type="text" formControlName="serialNumber" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Location</label>
+          <select formControlName="locationId" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary">
+            <option [value]="null">None</option>
+            <option *ngFor="let location of locations" [value]="location.id">{{ location.fullLocation }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Purchase Date</label>
+          <input type="date" formControlName="purchaseDate" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Purchase Price</label>
+          <input type="number" step="0.01" formControlName="purchasePrice" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Warranty Expiry</label>
+          <input type="date" formControlName="warrantyExpiry" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" />
+        </div>
+        <div class="sm:col-span-2">
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Description</label>
+          <textarea formControlName="description" rows="3" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary"></textarea>
+        </div>
+        <div class="sm:col-span-2">
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Notes</label>
+          <textarea formControlName="notes" rows="3" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+        <button type="button" (click)="closeCreateModal()" class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+          Cancel
+        </button>
+        <button type="submit" [disabled]="!assetForm.valid" class="px-4 py-2 rounded-lg bg-primary text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+          Create Asset
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Modal (same structure as create) -->
+<div *ngIf="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+  <div class="bg-white dark:bg-surface-dark rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+      <h2 class="text-xl font-bold text-slate-900 dark:text-white">Edit Asset</h2>
+      <button type="button" (click)="closeEditModal()" class="text-slate-400 hover:text-slate-600">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <form [formGroup]="assetForm" (ngSubmit)="onEditSubmit()" class="p-6 space-y-4">
+      <!-- Form fields without AssetId since it's auto-generated -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Rest of fields same as create modal -->
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Barcode</label>
+          <input type="text" formControlName="barcode" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Category *</label>
+          <select formControlName="category" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary">
+            <option *ngFor="let key of categoryKeys" [value]="assetCategories[key]">{{ key }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status *</label>
+          <select formControlName="status" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary">
+            <option *ngFor="let key of statusKeys" [value]="assetStatuses[key]">{{ key }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Brand *</label>
+          <input type="text" formControlName="brand" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Model *</label>
+          <input type="text" formControlName="model" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Serial Number</label>
+          <input type="text" formControlName="serialNumber" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Location</label>
+          <select formControlName="locationId" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary">
+            <option [value]="null">None</option>
+            <option *ngFor="let location of locations" [value]="location.id">{{ location.fullLocation }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Purchase Date</label>
+          <input type="date" formControlName="purchaseDate" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Purchase Price</label>
+          <input type="number" step="0.01" formControlName="purchasePrice" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Warranty Expiry</label>
+          <input type="date" formControlName="warrantyExpiry" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" />
+        </div>
+        <div class="sm:col-span-2">
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Description</label>
+          <textarea formControlName="description" rows="3" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary"></textarea>
+        </div>
+        <div class="sm:col-span-2">
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Notes</label>
+          <textarea formControlName="notes" rows="3" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+        <button type="button" (click)="closeEditModal()" class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+          Cancel
+        </button>
+        <button type="submit" [disabled]="!assetForm.valid" class="px-4 py-2 rounded-lg bg-primary text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+          Update Asset
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- View Modal -->
+<div *ngIf="showViewModal && selectedAsset" class="fixed inset-0 z-50 bg-black/50">
+  <div class="h-full overflow-y-auto">
+    <div class="min-h-full bg-background-light dark:bg-background-dark">
+      <!-- Header with Breadcrumbs -->
+      <div class="bg-white dark:bg-surface-dark border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div class="flex items-center justify-between mb-4">
+            <nav class="flex items-center text-sm text-slate-500 dark:text-slate-400">
+              <span>Inventory</span>
+              <span class="mx-2 text-slate-300">/</span>
+              <span>{{ getCategoryName(selectedAsset.category) }}</span>
+              <span class="mx-2 text-slate-300">/</span>
+              <span class="text-slate-900 dark:text-white font-medium">{{ selectedAsset.assetId }}</span>
+            </nav>
+            <button type="button" (click)="closeViewModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-2">
+              <span class="material-symbols-outlined text-[24px]">close</span>
+            </button>
+          </div>
+          
+          <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-3 mb-1">
+                <h2 class="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{{ selectedAsset.brand }} {{ selectedAsset.model }}</h2>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-medium" [ngClass]="getStatusClass(selectedAsset.status)">
+                  {{ getStatusName(selectedAsset.status) }}
+                </span>
+              </div>
+              <p class="text-slate-500 dark:text-slate-400">
+                Asset Tag: <span class="font-mono text-slate-700 dark:text-slate-300">{{ selectedAsset.assetId }}</span>
+                <span *ngIf="selectedAsset.serialNumber"> • Serial: <span class="font-mono text-slate-700 dark:text-slate-300">{{ selectedAsset.serialNumber }}</span></span>
+              </p>
+            </div>
+            <div class="flex flex-wrap gap-3">
+              <button *ngIf="canEdit" (click)="closeViewModal(); openEditModal(selectedAsset)" class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm">
+                <span class="material-symbols-outlined text-[18px]">edit</span>
+                Edit Asset
+              </button>
+              <button class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm">
+                <span class="material-symbols-outlined text-[18px]">print</span>
+                Print Label
+              </button>
+              <button *ngIf="canEdit" (click)="openAssignModal(selectedAsset)" class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm">
+                <span class="material-symbols-outlined text-[18px]">person_add</span>
+                Reassign
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Left Column: Details & Holder -->
+          <div class="lg:col-span-2 space-y-8">
+            <!-- Asset Overview Card -->
+            <div class="bg-white dark:bg-surface-dark rounded-xl shadow-sm overflow-hidden border border-slate-100 dark:border-slate-800">
+              <div class="p-6 border-b border-slate-100 dark:border-slate-800">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Asset Overview</h3>
+              </div>
+              <div class="p-6">
+                <div class="flex flex-col md:flex-row gap-8 items-start">
+                  <!-- Placeholder Image -->
+                  <div class="w-full md:w-1/3 flex-shrink-0 bg-slate-50 dark:bg-slate-800 rounded-lg p-4 flex items-center justify-center border border-slate-100 dark:border-slate-700 h-[180px]">
+                    <div class="text-center">
+                      <span class="material-symbols-outlined text-[48px] text-slate-400 mb-2">{{ getCategoryIcon(selectedAsset.category) }}</span>
+                      <p class="text-sm text-slate-500 dark:text-slate-400">{{ getCategoryName(selectedAsset.category) }}</p>
+                    </div>
+                  </div>
+                  <!-- Key Data Grid -->
+                  <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-4 w-full">
+                    <div>
+                      <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Model Name</p>
+                      <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ selectedAsset.brand }} {{ selectedAsset.model }}</p>
+                      <p class="text-xs text-slate-500" *ngIf="selectedAsset.description">{{ selectedAsset.description }}</p>
+                    </div>
+                    <div>
+                      <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Category</p>
+                      <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ getCategoryName(selectedAsset.category) }}</p>
+                    </div>
+                    <div *ngIf="selectedAsset.purchaseDate">
+                      <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Purchase Date</p>
+                      <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ selectedAsset.purchaseDate | date:'MMM dd, yyyy' }}</p>
+                    </div>
+                    <div *ngIf="selectedAsset.warrantyExpiry">
+                      <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Warranty Expiry</p>
+                      <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ selectedAsset.warrantyExpiry | date:'MMM dd, yyyy' }}</p>
+                    </div>
+                    <div *ngIf="selectedAsset.purchasePrice">
+                      <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Purchase Cost</p>
+                      <p class="text-sm font-semibold text-slate-900 dark:text-white">${{ selectedAsset.purchasePrice | number:'1.2-2' }} USD</p>
+                    </div>
+                    <div>
+                      <p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">Location</p>
+                      <p class="text-sm font-semibold text-slate-900 dark:text-white">{{ selectedAsset.location?.fullLocation || 'Not assigned' }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Current Holder Card -->
+            <div class="bg-white dark:bg-surface-dark rounded-xl shadow-sm overflow-hidden border border-slate-100 dark:border-slate-800">
+              <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Current Holder</h3>
+                <span *ngIf="selectedAsset.currentAssignment" class="text-xs text-slate-500 dark:text-slate-400">
+                  Assigned {{ selectedAsset.currentAssignment.assignedDate | date:'MMM dd, yyyy' }}
+                </span>
+              </div>
+              <div class="p-6">
+                <div *ngIf="selectedAsset.currentAssignment; else noAssignment" class="flex items-start md:items-center flex-col md:flex-row gap-6">
+                  <div class="relative">
+                    <div class="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-white text-xl font-bold shadow-md">
+                      {{ getEmployeeInitials(selectedAsset.currentAssignment.employeeName) }}
+                    </div>
+                    <div class="absolute -bottom-1 -right-1 bg-green-500 w-5 h-5 rounded-full border-2 border-white dark:border-surface-dark flex items-center justify-center">
+                      <span class="material-symbols-outlined text-[12px] text-white font-bold">check</span>
+                    </div>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <h4 class="text-lg font-bold text-slate-900 dark:text-white truncate">{{ selectedAsset.currentAssignment.employeeName }}</h4>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 truncate">Current Asset Holder</p>
+                    <div class="flex items-center gap-4 mt-2 text-sm text-slate-600 dark:text-slate-300">
+                      <div class="flex items-center gap-1.5" *ngIf="selectedAsset.location">
+                        <span class="material-symbols-outlined text-[18px] text-slate-400">location_on</span>
+                        <span>{{ selectedAsset.location.fullLocation }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex md:flex-col gap-2 w-full md:w-auto mt-4 md:mt-0">
+                    <button class="flex-1 md:flex-none justify-center inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                      <span class="material-symbols-outlined text-[18px]">chat</span>
+                      Message
+                    </button>
+                    <button class="flex-1 md:flex-none justify-center inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                      <span class="material-symbols-outlined text-[18px]">account_circle</span>
+                      Profile
+                    </button>
+                  </div>
+                </div>
+                <ng-template #noAssignment>
+                  <div class="text-center py-8">
+                    <span class="material-symbols-outlined text-[48px] text-slate-300 dark:text-slate-600 mb-2">person_off</span>
+                    <p class="text-slate-500 dark:text-slate-400">No current holder</p>
+                    <p class="text-sm text-slate-400 dark:text-slate-500">This asset is available for assignment</p>
+                  </div>
+                </ng-template>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Timeline -->
+          <div class="lg:col-span-1">
+            <div class="bg-white dark:bg-surface-dark rounded-xl shadow-sm overflow-hidden border border-slate-100 dark:border-slate-800 sticky top-24">
+              <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Activity Timeline</h3>
+                <button 
+                  *ngIf="selectedAssetTimeline.length > 4"
+                  (click)="toggleTimelineView()"
+                  class="text-primary text-sm font-medium hover:underline transition-colors">
+                  {{ showFullTimeline ? 'Show Less' : 'View All' }}
+                </button>
+              </div>
+              <div class="p-6">
+                <!-- Timeline Container -->
+                <div *ngIf="selectedAssetTimeline.length > 0; else noTimeline" class="relative pl-4 border-l-2 border-slate-200 dark:border-slate-700 space-y-8">
+                  <div *ngFor="let entry of getDisplayedTimeline(); let last = last" class="relative" [class.pb-0]="last">
+                    <div class="absolute -left-[21px] top-1 h-3 w-3 rounded-full border-2 border-white dark:border-slate-900 ring-4 ring-white dark:ring-slate-900"
+                         [ngClass]="getTimelineStatusClass(entry.status)"></div>
+                    <div class="flex flex-col gap-1">
+                      <span class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                        {{ formatDate(entry.timestamp) }}
+                      </span>
+                      <h4 class="text-sm font-bold text-slate-900 dark:text-white">{{ entry.title }}</h4>
+                      <p class="text-sm text-slate-500 dark:text-slate-400">{{ entry.description }}</p>
+                      <div *ngIf="entry.employee" class="flex items-center gap-2 mt-1">
+                        <div class="w-5 h-5 rounded-full bg-primary flex items-center justify-center text-white text-xs font-bold">
+                          {{ entry.employee.firstName.charAt(0) }}{{ entry.employee.lastName.charAt(0) }}
+                        </div>
+                        <p class="text-xs text-slate-500">{{ entry.employee.fullName }}</p>
+                      </div>
+                      <div *ngIf="entry.userName && !entry.employee" class="flex items-center gap-2 mt-1">
+                        <div class="w-5 h-5 rounded-full bg-slate-400 flex items-center justify-center text-white text-xs font-bold">
+                          {{ entry.userName.charAt(0) }}
+                        </div>
+                        <p class="text-xs text-slate-500">Action by {{ entry.userName }}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Show count of remaining items when collapsed -->
+                  <div *ngIf="!showFullTimeline && selectedAssetTimeline.length > 4" 
+                       class="text-center pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <p class="text-sm text-slate-500 dark:text-slate-400">
+                      {{ selectedAssetTimeline.length - 4 }} more activities
+                    </p>
+                  </div>
+                </div>
+                <ng-template #noTimeline>
+                  <div class="text-center py-8">
+                    <span class="material-symbols-outlined text-[48px] text-slate-300 dark:text-slate-600 mb-2">timeline</span>
+                    <p class="text-slate-500 dark:text-slate-400">No activity recorded</p>
+                    <p class="text-sm text-slate-400 dark:text-slate-500">Timeline will appear as actions are taken</p>
+                  </div>
+                </ng-template>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Assign Asset Modal -->
+<div *ngIf="showAssignModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+  <div class="bg-white dark:bg-slate-900 rounded-xl shadow-xl max-w-md w-full mx-4">
+    <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
+      <h2 class="text-xl font-bold text-slate-900 dark:text-white">Assign Asset</h2>
+      <button type="button" (click)="closeAssignModal()" class="text-slate-400 hover:text-slate-600">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <form [formGroup]="assignmentForm" (ngSubmit)="onAssignSubmit()" class="p-6 space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Employee *</label>
+        <select formControlName="employeeId" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary">
+          <option value="">Select an employee</option>
+          <option *ngFor="let employee of employees" [value]="employee.id">{{ employee.fullName }} - {{ employee.department }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Location</label>
+        <select formControlName="locationId" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary">
+          <option value="">Select a location (optional)</option>
+          <option *ngFor="let location of locations" [value]="location.id">{{ location.fullLocation }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Expected Return Date</label>
+        <input type="date" formControlName="expectedReturnDate" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Notes</label>
+        <textarea formControlName="notes" rows="3" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" placeholder="Assignment notes..."></textarea>
+      </div>
+      <div class="flex justify-end gap-3 pt-4">
+        <button type="button" (click)="closeAssignModal()" class="px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+          Cancel
+        </button>
+        <button type="submit" [disabled]="!assignmentForm.valid" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+          Assign Asset
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<app-confirmation-modal
+  [show]="showConfirmationModal"
+  [data]="confirmationData"
+  (confirmed)="onConfirmationConfirmed()"
+  (cancelled)="onConfirmationCancelled()">
+</app-confirmation-modal>
+
+</app-layout>

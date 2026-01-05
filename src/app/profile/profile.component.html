@@ -1,0 +1,236 @@
+<app-layout currentRoute="/profile">
+  <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+    <div class="max-w-4xl mx-auto">
+      <!-- Page Header -->
+      <div class="mb-8">
+        <div class="flex items-center gap-4 mb-4">
+          <div class="h-16 w-16 rounded-full bg-primary flex items-center justify-center text-white text-xl font-bold shadow-lg">
+            {{ currentUser?.firstName?.charAt(0) || 'U' }}{{ currentUser?.lastName?.charAt(0) || '' }}
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">{{ currentUser?.fullName || 'User Profile' }}</h1>
+            <p class="text-slate-600 dark:text-slate-400">Manage your account settings and preferences</p>
+          </div>
+        </div>
+        
+        <!-- Role Badge -->
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" [ngClass]="getRoleBadgeClass()">
+            <span class="material-symbols-outlined text-[16px] mr-1">
+              {{ currentUser?.role === userRoles.Admin ? 'admin_panel_settings' : 
+                 currentUser?.role === userRoles.ITOfficer ? 'engineering' : 'visibility' }}
+            </span>
+            {{ getRoleName() }}
+          </span>
+          <span *ngIf="currentUser?.isActive" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
+            <span class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span>
+            Active
+          </span>
+          <span *ngIf="!currentUser?.isActive" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400">
+            <span class="w-1.5 h-1.5 bg-red-500 rounded-full mr-1.5"></span>
+            Inactive
+          </span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Profile Information Card -->
+        <div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 p-6">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <span class="material-symbols-outlined">person</span>
+              Profile Information
+            </h2>
+            <button
+              type="button"
+              (click)="toggleEditProfile()"
+              class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors"
+              [ngClass]="isEditingProfile ? 
+                'bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30' : 
+                'bg-primary/10 text-primary hover:bg-primary/20'">
+              <span class="material-symbols-outlined text-[18px]">
+                {{ isEditingProfile ? 'close' : 'edit' }}
+              </span>
+              {{ isEditingProfile ? 'Cancel' : 'Edit' }}
+            </button>
+          </div>
+
+          <form [formGroup]="profileForm" (ngSubmit)="onUpdateProfile()">
+            <div class="space-y-4">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">First Name</label>
+                  <input
+                    type="text"
+                    formControlName="firstName"
+                    [readonly]="!isEditingProfile"
+                    class="w-full px-3 py-2 rounded-lg border transition-colors"
+                    [ngClass]="isEditingProfile ? 
+                      'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-primary' : 
+                      'border-transparent bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400'">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Last Name</label>
+                  <input
+                    type="text"
+                    formControlName="lastName"
+                    [readonly]="!isEditingProfile"
+                    class="w-full px-3 py-2 rounded-lg border transition-colors"
+                    [ngClass]="isEditingProfile ? 
+                      'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-primary' : 
+                      'border-transparent bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400'">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Email Address</label>
+                <input
+                  type="email"
+                  formControlName="email"
+                  [readonly]="!isEditingProfile"
+                  class="w-full px-3 py-2 rounded-lg border transition-colors"
+                  [ngClass]="isEditingProfile ? 
+                    'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-primary' : 
+                    'border-transparent bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400'">
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Phone Number</label>
+                <input
+                  type="tel"
+                  formControlName="phoneNumber"
+                  [readonly]="!isEditingProfile"
+                  placeholder="Optional"
+                  class="w-full px-3 py-2 rounded-lg border transition-colors"
+                  [ngClass]="isEditingProfile ? 
+                    'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:ring-2 focus:ring-primary' : 
+                    'border-transparent bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400'">
+              </div>
+            </div>
+
+            <div *ngIf="isEditingProfile" class="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+              <button
+                type="button"
+                (click)="toggleEditProfile()"
+                class="px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                Cancel
+              </button>
+              <button
+                type="submit"
+                [disabled]="!profileForm.valid || isLoading"
+                class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
+                <span *ngIf="isLoading" class="material-symbols-outlined animate-spin text-[18px]">refresh</span>
+                {{ isLoading ? 'Updating...' : 'Update Profile' }}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Account Details & Security Card -->
+        <div class="space-y-8">
+          <!-- Account Details -->
+          <div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 p-6">
+            <h2 class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2 mb-6">
+              <span class="material-symbols-outlined">badge</span>
+              Account Details
+            </h2>
+
+            <div class="space-y-4">
+              <div class="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-800">
+                <span class="text-sm font-medium text-slate-600 dark:text-slate-400">User ID</span>
+                <span class="text-sm text-slate-900 dark:text-white font-mono">{{ currentUser?.id }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-800">
+                <span class="text-sm font-medium text-slate-600 dark:text-slate-400">Email</span>
+                <span class="text-sm text-slate-900 dark:text-white">{{ currentUser?.email }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2">
+                <span class="text-sm font-medium text-slate-600 dark:text-slate-400">Member Since</span>
+                <span class="text-sm text-slate-900 dark:text-white">{{ formatDate(currentUser?.createdAt || '') }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Security Section -->
+          <div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 p-6">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                <span class="material-symbols-outlined">security</span>
+                Security
+              </h2>
+              <button
+                type="button"
+                (click)="toggleChangePassword()"
+                class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors"
+                [ngClass]="isChangingPassword ? 
+                  'bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30' : 
+                  'bg-primary/10 text-primary hover:bg-primary/20'">
+                <span class="material-symbols-outlined text-[18px]">
+                  {{ isChangingPassword ? 'close' : 'key' }}
+                </span>
+                {{ isChangingPassword ? 'Cancel' : 'Change Password' }}
+              </button>
+            </div>
+
+            <div *ngIf="!isChangingPassword" class="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+              <span class="material-symbols-outlined text-green-600 dark:text-green-400">check_circle</span>
+              <div>
+                <p class="text-sm font-medium text-slate-900 dark:text-white">Password Protected</p>
+                <p class="text-xs text-slate-600 dark:text-slate-400">Your account is secured with a password</p>
+              </div>
+            </div>
+
+            <form *ngIf="isChangingPassword" [formGroup]="passwordForm" (ngSubmit)="onChangePassword()" class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Current Password</label>
+                <input
+                  type="password"
+                  formControlName="currentPassword"
+                  class="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-primary"
+                  placeholder="Enter your current password">
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">New Password</label>
+                <input
+                  type="password"
+                  formControlName="newPassword"
+                  class="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-primary"
+                  placeholder="Enter your new password">
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Confirm New Password</label>
+                <input
+                  type="password"
+                  formControlName="confirmPassword"
+                  class="w-full px-3 py-2 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-lg focus:ring-2 focus:ring-primary"
+                  placeholder="Confirm your new password">
+                <p *ngIf="passwordForm.get('confirmPassword')?.touched && passwordForm.hasError('passwordMismatch')" 
+                   class="text-xs text-red-600 dark:text-red-400 mt-1">
+                  Passwords do not match
+                </p>
+              </div>
+
+              <div class="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+                <button
+                  type="button"
+                  (click)="toggleChangePassword()"
+                  class="px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  [disabled]="!passwordForm.valid || isLoading"
+                  class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
+                  <span *ngIf="isLoading" class="material-symbols-outlined animate-spin text-[18px]">refresh</span>
+                  {{ isLoading ? 'Changing...' : 'Change Password' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</app-layout>

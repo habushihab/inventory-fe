@@ -1,0 +1,175 @@
+<app-layout currentRoute="/locations">
+  <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+    <div class="max-w-7xl mx-auto flex flex-col gap-6">
+      <div class="flex items-center justify-between">
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Locations</h1>
+        <button 
+          type="button"
+          (click)="openCreateModal()"
+          class="inline-flex items-center gap-2 justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-600 transition-all">
+          <span class="material-symbols-outlined text-[20px]">add</span>
+          <span class="hidden sm:inline">Add New Location</span>
+          <span class="sm:hidden">Add</span>
+        </button>
+      </div>
+
+      <!-- Filters -->
+      <div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row gap-4">
+          <input 
+            type="text"
+            [(ngModel)]="buildingFilter"
+            (keyup.enter)="onFilterChange()"
+            placeholder="Building"
+            class="rounded-lg border-0 bg-slate-100 dark:bg-slate-800 py-2 px-4 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary text-sm"
+          />
+          <input 
+            type="number"
+            [(ngModel)]="floorFilter"
+            (keyup.enter)="onFilterChange()"
+            placeholder="Floor"
+            class="rounded-lg border-0 bg-slate-100 dark:bg-slate-800 py-2 px-4 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary text-sm"
+          />
+          <select 
+            [(ngModel)]="isActiveFilter"
+            (change)="onFilterChange()"
+            class="rounded-lg border-0 bg-slate-100 dark:bg-slate-800 py-2 px-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary text-sm"
+          >
+            <option [ngValue]="null">All</option>
+            <option [ngValue]="true">Active</option>
+            <option [ngValue]="false">Inactive</option>
+          </select>
+          <button 
+            type="button"
+            (click)="onFilterChange()"
+            class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium">
+            Filter
+          </button>
+        </div>
+      </div>
+
+      <!-- Locations Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div *ngIf="isLoading" class="col-span-full text-center text-slate-400 py-8">Loading...</div>
+        <div *ngIf="!isLoading && locations.length === 0" class="col-span-full text-center text-slate-400 py-8">No locations found</div>
+        <div *ngFor="let location of locations" class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 p-6 hover:shadow-md transition-shadow">
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <h3 class="text-lg font-bold text-slate-900 dark:text-white">{{ location.fullLocation }}</h3>
+              <p *ngIf="location.description" class="text-sm text-slate-500 dark:text-slate-400 mt-1">{{ location.description }}</p>
+            </div>
+            <span class="px-2 py-1 text-xs font-medium rounded-full" [ngClass]="location.isActive ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'">
+              {{ location.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+          <div class="flex gap-2 mt-4">
+            <button 
+              type="button"
+              (click)="openEditModal(location)"
+              class="flex-1 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm">
+              Edit
+            </button>
+            <button 
+              *ngIf="location.isActive"
+              type="button"
+              (click)="onDeactivate(location)"
+              class="px-3 py-2 rounded-lg border border-orange-200 dark:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors text-sm">
+              Deactivate
+            </button>
+            <button 
+              *ngIf="!location.isActive"
+              type="button"
+              (click)="onActivate(location)"
+              class="px-3 py-2 rounded-lg border border-green-200 dark:border-green-700 text-green-700 dark:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors text-sm">
+              Activate
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</app-layout>
+
+<!-- Create Location Modal -->
+<div *ngIf="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-lg mx-4">
+    <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
+      <h2 class="text-xl font-bold text-slate-900 dark:text-white">Add New Location</h2>
+      <button type="button" (click)="closeCreateModal()" class="text-slate-400 hover:text-slate-600">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <form [formGroup]="locationForm" (ngSubmit)="onCreateSubmit()" class="p-6 space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Building *</label>
+        <input formControlName="building" type="text" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" placeholder="Enter building name">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Floor *</label>
+        <input formControlName="floor" type="number" min="0" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" placeholder="Enter floor number">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Room</label>
+        <input formControlName="room" type="text" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" placeholder="Enter room number/name">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Description</label>
+        <textarea formControlName="description" rows="3" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" placeholder="Enter location description"></textarea>
+      </div>
+      <div class="flex gap-3 pt-4">
+        <button type="button" (click)="closeCreateModal()" class="flex-1 px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+          Cancel
+        </button>
+        <button type="submit" [disabled]="!locationForm.valid" class="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+          Create Location
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Location Modal -->
+<div *ngIf="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+  <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-lg mx-4">
+    <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
+      <h2 class="text-xl font-bold text-slate-900 dark:text-white">Edit Location</h2>
+      <button type="button" (click)="closeEditModal()" class="text-slate-400 hover:text-slate-600">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <form [formGroup]="locationForm" (ngSubmit)="onEditSubmit()" class="p-6 space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Building *</label>
+        <input formControlName="building" type="text" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" placeholder="Enter building name">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Floor *</label>
+        <input formControlName="floor" type="number" min="0" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" placeholder="Enter floor number">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Room</label>
+        <input formControlName="room" type="text" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" placeholder="Enter room number/name">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Description</label>
+        <textarea formControlName="description" rows="3" class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary" placeholder="Enter location description"></textarea>
+      </div>
+      <div class="flex gap-3 pt-4">
+        <button type="button" (click)="closeEditModal()" class="flex-1 px-4 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+          Cancel
+        </button>
+        <button type="submit" [disabled]="!locationForm.valid" class="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+          Update Location
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<app-confirmation-modal
+  [show]="showConfirmationModal"
+  [data]="confirmationData"
+  (confirmed)="onConfirmationConfirmed()"
+  (cancelled)="onConfirmationCancelled()">
+</app-confirmation-modal>

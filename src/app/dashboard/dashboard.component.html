@@ -1,0 +1,180 @@
+<app-layout currentRoute="/dashboard">
+  <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+    <div class="max-w-7xl mx-auto flex flex-col gap-6 lg:gap-8">
+        <!-- Page Heading & Actions -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Overview</h1>
+            <p class="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-1">Welcome back, here's what's happening with your inventory today.</p>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <button 
+              type="button"
+              (click)="onAssignAsset()"
+              class="inline-flex items-center gap-2 justify-center rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all">
+              <span class="material-symbols-outlined text-[20px]">assignment_add</span>
+              <span class="hidden sm:inline">Assign Asset</span>
+              <span class="sm:hidden">Assign</span>
+            </button>
+            <button 
+              type="button"
+              (click)="onAddNewAsset()"
+              class="inline-flex items-center gap-2 justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all">
+              <span class="material-symbols-outlined text-[20px]">add</span>
+              <span class="hidden sm:inline">Add New Asset</span>
+              <span class="sm:hidden">Add Asset</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Stat Card 1 -->
+          <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark p-4 sm:p-6 shadow-sm flex flex-col justify-between h-28 sm:h-32 relative overflow-hidden group">
+            <div class="flex items-start justify-between z-10">
+              <div>
+                <p class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Total Assets</p>
+                <p class="mt-1 sm:mt-2 text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{{ getTotalAssets().toLocaleString() }}</p>
+              </div>
+              <div class="p-1.5 sm:p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-primary">
+                <span class="material-symbols-outlined text-[18px] sm:text-[20px]">inventory_2</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 mt-2 z-10">
+              <span class="material-symbols-outlined text-green-500 text-sm">trending_up</span>
+              <span class="text-xs font-medium text-green-600 dark:text-green-400">+12% from last month</span>
+            </div>
+            <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-primary/5 rounded-full group-hover:bg-primary/10 transition-colors"></div>
+          </div>
+
+          <!-- Stat Card 2 -->
+          <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark p-4 sm:p-6 shadow-sm flex flex-col justify-between h-28 sm:h-32 relative overflow-hidden group">
+            <div class="flex items-start justify-between z-10">
+              <div>
+                <p class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Utilization Rate</p>
+                <p class="mt-1 sm:mt-2 text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{{ getUtilizationRate() }}%</p>
+              </div>
+              <div class="p-1.5 sm:p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg text-indigo-600 dark:text-indigo-400">
+                <span class="material-symbols-outlined text-[18px] sm:text-[20px]">pie_chart</span>
+              </div>
+            </div>
+            <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 mt-auto z-10">
+              <div class="bg-indigo-600 h-1.5 rounded-full" [style.width.%]="getUtilizationRate()"></div>
+            </div>
+          </div>
+
+          <!-- Stat Card 3 -->
+          <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark p-4 sm:p-6 shadow-sm flex flex-col justify-between h-28 sm:h-32 relative overflow-hidden group">
+            <div class="flex items-start justify-between z-10">
+              <div>
+                <p class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Pending Returns</p>
+                <p class="mt-1 sm:mt-2 text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{{ getPendingReturns() }}</p>
+              </div>
+              <div class="p-1.5 sm:p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg text-orange-600 dark:text-orange-400">
+                <span class="material-symbols-outlined text-[18px] sm:text-[20px]">pending_actions</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 mt-2 z-10">
+              <span class="text-xs font-medium text-orange-600 dark:text-orange-400">4 overdue items</span>
+            </div>
+          </div>
+
+          <!-- Stat Card 4 -->
+          <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark p-4 sm:p-6 shadow-sm flex flex-col justify-between h-28 sm:h-32 relative overflow-hidden group">
+            <div class="flex items-start justify-between z-10">
+              <div>
+                <p class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Low Stock Alerts</p>
+                <p class="mt-1 sm:mt-2 text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{{ getLowStockAlerts() }}</p>
+              </div>
+              <div class="p-1.5 sm:p-2 bg-red-50 dark:bg-red-900/20 rounded-lg text-red-600 dark:text-red-400">
+                <span class="material-symbols-outlined text-[18px] sm:text-[20px]">warning</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 mt-2 z-10">
+              <span class="text-xs font-medium text-red-600 dark:text-red-400">Action required</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Content Columns -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+          <!-- Chart Section (Takes up 2/3) -->
+          <div class="lg:col-span-2 flex flex-col rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark shadow-sm">
+            <div class="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center gap-4">
+              <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Asset Valuation by Department</h3>
+              <button 
+                type="button"
+                (click)="onViewReport()"
+                class="text-xs sm:text-sm text-primary font-medium hover:underline whitespace-nowrap">View Report</button>
+            </div>
+            <div class="p-4 sm:p-6 flex-1 flex flex-col justify-end min-h-[280px] sm:min-h-[320px]">
+              <!-- CSS-only Bar Chart Simulation -->
+              <div class="flex items-end justify-between gap-2 sm:gap-4 h-48 sm:h-64 w-full">
+                <!-- Y-Axis Labels (Visual Only) -->
+                <div class="flex flex-col justify-between h-full text-xs text-slate-400 font-medium pb-6">
+                  <span>$100k</span>
+                  <span>$75k</span>
+                  <span>$50k</span>
+                  <span>$25k</span>
+                  <span>0</span>
+                </div>
+
+                <!-- Bars -->
+                <div class="flex flex-1 items-end justify-around h-full gap-1 sm:gap-2 border-l border-b border-slate-100 dark:border-slate-700 pb-2 pl-2">
+                  <div *ngFor="let dept of getAssetValuationByDepartment(); let i = index" class="flex flex-col items-center gap-1 sm:gap-2 group w-full">
+                    <div 
+                      class="w-8 sm:w-12 bg-primary/80 group-hover:bg-primary rounded-t-sm transition-all relative" 
+                      [style.height.%]="(dept.count / (dashboardData?.totalAssets || 1)) * 100"
+                    >
+                      <div class="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded transition-opacity">{{ dept.count }}</div>
+                    </div>
+                    <span class="text-xs text-slate-500 font-medium">{{ dept.department.length > 4 ? (dept.department.substring(0, 4)) : dept.department }}</span>
+                  </div>
+                  <div *ngIf="getAssetValuationByDepartment().length === 0" class="flex items-center justify-center h-full text-slate-400 text-sm">
+                    No data available
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Activity List (Takes up 1/3) -->
+          <div class="flex flex-col rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark shadow-sm">
+            <div class="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800">
+              <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Recent Activity</h3>
+            </div>
+            <div class="flex-1 overflow-y-auto max-h-[400px]">
+              <div *ngIf="recentActivities.length === 0 && !isLoading" class="p-8 text-center text-slate-400 text-sm">
+                No recent activity
+              </div>
+              <div *ngIf="isLoading" class="p-8 text-center text-slate-400 text-sm">
+                Loading...
+              </div>
+              <div *ngIf="recentActivities.length > 0" class="divide-y divide-slate-100 dark:divide-slate-800">
+                <div *ngFor="let activity of recentActivities" class="p-3 sm:p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex gap-3 sm:gap-4 items-start">
+                  <div class="h-10 w-10 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0 text-primary">
+                    <span class="material-symbols-outlined text-[20px]">assignment</span>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-slate-900 dark:text-white truncate">{{ activity.assetName }} Assigned</p>
+                    <p class="text-xs text-slate-500 mt-0.5">To {{ activity.employeeName }}</p>
+                  </div>
+                  <span class="text-xs text-slate-400 whitespace-nowrap">{{ formatTimeAgo(activity.assignedDate) }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="p-3 sm:p-4 border-t border-slate-100 dark:border-slate-800">
+              <button 
+                type="button"
+                (click)="onViewAllActivity()"
+                class="w-full text-center text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors">View All Activity</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="mt-12 mb-6 text-center">
+        <p class="text-xs text-slate-400">© 2026 MadfoatCom Corp. All rights reserved.</p>
+      </footer>
+    </div>
+</app-layout>

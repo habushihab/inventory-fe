@@ -1,0 +1,184 @@
+<div class="flex h-screen w-full relative">
+  <!-- Mobile Overlay -->
+  <div 
+    *ngIf="sidebarOpen"
+    class="fixed inset-0 bg-black/50 z-40 lg:hidden"
+    (click)="closeSidebar()"
+  ></div>
+
+  <!-- Sidebar Navigation -->
+  <aside 
+    [class]="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
+    class="fixed lg:static inset-y-0 left-0 z-50 w-64 xl:w-72 flex-shrink-0 flex flex-col border-r border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark transition-transform duration-300 ease-in-out">
+    <div class="h-16 flex items-center justify-between px-4 lg:px-6 border-b border-slate-100 dark:border-slate-800/50">
+      <div class="flex items-center gap-2 min-w-0 flex-1">
+        <div class="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white flex-shrink-0">
+          <span class="material-symbols-outlined text-[20px]">inventory_2</span>
+        </div>
+        <span class="text-lg font-bold tracking-tight text-slate-900 dark:text-white truncate">
+          <span class="hidden xl:inline">Inventory System</span>
+          <span class="xl:hidden">Inventory</span>
+        </span>
+      </div>
+      <button 
+        type="button"
+        (click)="closeSidebar()"
+        class="lg:hidden p-2 -mr-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 touch-manipulation">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-1">
+      <p class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-2">Main Menu</p>
+      
+      <a 
+        class="flex items-center gap-3 px-3 py-3 rounded-lg transition-colors touch-manipulation min-h-[44px]" 
+        [ngClass]="currentRoute === '/dashboard' ? 'bg-primary/10 text-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'"
+        routerLink="/dashboard" 
+        routerLinkActive="bg-primary/10 text-primary"
+        (click)="closeSidebar()">
+        <span class="material-symbols-outlined flex-shrink-0" [attr.data-weight]="currentRoute === '/dashboard' ? 'fill' : ''">dashboard</span>
+        <span class="text-sm font-medium">Dashboard</span>
+      </a>
+      
+      <a 
+        class="flex items-center gap-3 px-3 py-3 rounded-lg transition-colors touch-manipulation min-h-[44px]" 
+        [ngClass]="currentRoute === '/assets' ? 'bg-primary/10 text-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'"
+        routerLink="/assets"
+        routerLinkActive="bg-primary/10 text-primary"
+        (click)="closeSidebar()">
+        <span class="material-symbols-outlined flex-shrink-0">inventory_2</span>
+        <span class="text-sm font-medium">Assets</span>
+      </a>
+      
+      <a 
+        class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors" 
+        [ngClass]="currentRoute === '/employees' ? 'bg-primary/10 text-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'"
+        routerLink="/employees"
+        routerLinkActive="bg-primary/10 text-primary"
+        (click)="closeSidebar()">
+        <span class="material-symbols-outlined">group</span>
+        <span class="text-sm font-medium">Employees</span>
+      </a>
+      
+      <a 
+        class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors" 
+        [ngClass]="currentRoute === '/locations' ? 'bg-primary/10 text-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'"
+        routerLink="/locations"
+        routerLinkActive="bg-primary/10 text-primary"
+        (click)="closeSidebar()">
+        <span class="material-symbols-outlined">location_on</span>
+        <span class="text-sm font-medium">Locations</span>
+      </a>
+      
+      <a 
+        class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors" 
+        [ngClass]="currentRoute === '/assignments' ? 'bg-primary/10 text-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'"
+        routerLink="/assignments"
+        routerLinkActive="bg-primary/10 text-primary"
+        (click)="closeSidebar()">
+        <span class="material-symbols-outlined">assignment</span>
+        <span class="text-sm font-medium">Assignments</span>
+      </a>
+      
+      <a 
+        class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors" 
+        [ngClass]="currentRoute === '/reports' ? 'bg-primary/10 text-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'"
+        routerLink="/reports"
+        routerLinkActive="bg-primary/10 text-primary"
+        (click)="closeSidebar()">
+        <span class="material-symbols-outlined">bar_chart</span>
+        <span class="text-sm font-medium">Reports</span>
+      </a>
+
+      <div class="my-2 border-t border-slate-100 dark:border-slate-800"></div>
+
+      <p class="px-3 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Management</p>
+      
+      <a 
+        class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors" 
+        [ngClass]="currentRoute === '/admin' ? 'bg-primary/10 text-primary' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'"
+        routerLink="/admin"
+        routerLinkActive="bg-primary/10 text-primary"
+        (click)="closeSidebar()">
+        <span class="material-symbols-outlined">admin_panel_settings</span>
+        <span class="text-sm font-medium">Admin</span>
+      </a>
+    </nav>
+
+    <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+      <button 
+        type="button"
+        (click)="onLogout()"
+        class="flex w-full items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400 transition-colors">
+        <span class="material-symbols-outlined">logout</span>
+        <span class="text-sm font-medium">Logout</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 flex flex-col h-full min-w-0 bg-background-light dark:bg-background-dark" (click)="closeUserDropdown()">
+    <!-- Top Navigation Bar -->
+    <header class="h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 bg-surface-light dark:bg-surface-dark border-b border-slate-200 dark:border-slate-800 shrink-0 gap-3" (click)="$event.stopPropagation()">
+      <button 
+        type="button"
+        (click)="toggleSidebar()"
+        class="lg:hidden text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+        <span class="material-symbols-outlined text-[24px]">menu</span>
+      </button>
+
+      <!-- Spacer to push user dropdown to the right -->
+      <div class="flex-1"></div>
+
+      <div class="flex items-center gap-3 sm:gap-6">
+        <div class="h-6 w-px bg-slate-200 dark:bg-slate-700"></div>
+
+        <div class="relative">
+          <div 
+            (click)="toggleUserDropdown(); $event.stopPropagation()"
+            class="flex items-center gap-2 sm:gap-3 cursor-pointer group">
+            <div class="hidden sm:flex flex-col items-end">
+              <span class="text-sm font-semibold text-slate-900 dark:text-white leading-none">{{ currentUser?.fullName || 'User' }}</span>
+              <span class="text-xs font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded mt-1">{{ getRoleName() }}</span>
+            </div>
+            <div class="relative">
+              <div class="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-primary flex items-center justify-center text-white ring-2 ring-white dark:ring-surface-dark group-hover:ring-primary/50 transition-all">
+                <span class="text-xs sm:text-sm font-semibold">{{ currentUser?.firstName?.charAt(0) || 'U' }}{{ currentUser?.lastName?.charAt(0) || '' }}</span>
+              </div>
+              <span class="absolute bottom-0 right-0 block h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full bg-green-500 ring-2 ring-white dark:ring-surface-dark"></span>
+            </div>
+            <span class="hidden sm:block material-symbols-outlined text-slate-400 group-hover:text-slate-600 transition-colors text-[20px]" 
+                  [class.rotate-180]="userDropdownOpen">expand_more</span>
+          </div>
+
+          <!-- Dropdown Menu -->
+          <div 
+            *ngIf="userDropdownOpen"
+            (click)="$event.stopPropagation()"
+            class="absolute right-0 mt-2 w-48 bg-white dark:bg-surface-dark rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 py-1 z-50">
+            <button
+              (click)="navigateToProfile()"
+              class="flex items-center gap-3 w-full px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+              <span class="material-symbols-outlined text-[20px]">person</span>
+              Profile
+            </button>
+            <div class="h-px bg-slate-200 dark:bg-slate-700 my-1"></div>
+            <button
+              (click)="onLogout()"
+              class="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+              <span class="material-symbols-outlined text-[20px]">logout</span>
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <ng-content></ng-content>
+  </main>
+  
+  <!-- Alert notifications - positioned in top right -->
+  <app-alerts></app-alerts>
+</div>

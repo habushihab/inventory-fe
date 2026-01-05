@@ -1,0 +1,389 @@
+<app-layout currentRoute="/employees">
+  <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+    <div class="max-w-7xl mx-auto flex flex-col gap-6">
+      <div class="flex items-center justify-between">
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Employees</h1>
+        <button 
+          type="button"
+          (click)="openCreateModal()"
+          class="inline-flex items-center gap-2 justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-600 transition-all">
+          <span class="material-symbols-outlined text-[20px]">add</span>
+          <span class="hidden sm:inline">Add New Employee</span>
+          <span class="sm:hidden">Add</span>
+        </button>
+      </div>
+
+      <!-- Search and Filters -->
+      <div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row gap-4">
+          <div class="flex-1">
+            <input 
+              type="text"
+              [(ngModel)]="searchTerm"
+              (keyup.enter)="onSearch()"
+              placeholder="Search by name, email, or employee ID..."
+              class="block w-full rounded-lg border-0 bg-slate-100 dark:bg-slate-800 py-2 px-4 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary focus:bg-white dark:focus:bg-slate-900 transition-all text-sm"
+            />
+          </div>
+          <div class="flex gap-2">
+            <input 
+              type="text"
+              [(ngModel)]="departmentFilter"
+              (keyup.enter)="onFilterChange()"
+              placeholder="Department"
+              class="rounded-lg border-0 bg-slate-100 dark:bg-slate-800 py-2 px-3 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary text-sm"
+            />
+            <select 
+              [(ngModel)]="isActiveFilter"
+              (change)="onFilterChange()"
+              class="rounded-lg border-0 bg-slate-100 dark:bg-slate-800 py-2 px-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary text-sm"
+            >
+              <option [ngValue]="null">All</option>
+              <option [ngValue]="true">Active</option>
+              <option [ngValue]="false">Inactive</option>
+            </select>
+            <button 
+              type="button"
+              (click)="onSearch()"
+              class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium">
+              Search
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Employees Table -->
+      <div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-slate-50 dark:bg-slate-800/50">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Employee ID</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Name</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Email</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Department</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Status</th>
+                <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+              <tr *ngIf="isLoading">
+                <td colspan="6" class="px-4 py-8 text-center text-slate-400">Loading...</td>
+              </tr>
+              <tr *ngIf="!isLoading && employees.length === 0">
+                <td colspan="6" class="px-4 py-8 text-center text-slate-400">No employees found</td>
+              </tr>
+              <tr *ngFor="let employee of employees" class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-white">{{ employee.employeeId }}</td>
+                <td class="px-4 py-3 text-sm text-slate-900 dark:text-white">{{ employee.fullName }}</td>
+                <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{{ employee.email }}</td>
+                <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{{ employee.department }}</td>
+                <td class="px-4 py-3">
+                  <span class="px-2 py-1 text-xs font-medium rounded-full" [ngClass]="employee.isActive ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'">
+                    {{ employee.isActive ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-right text-sm font-medium">
+                  <div class="flex items-center justify-end gap-2">
+                    <button 
+                      type="button"
+                      (click)="openViewModal(employee)"
+                      class="text-primary hover:text-blue-600 transition-colors">
+                      <span class="material-symbols-outlined text-[20px]">visibility</span>
+                    </button>
+                    <button 
+                      type="button"
+                      (click)="openEditModal(employee)"
+                      class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+                      <span class="material-symbols-outlined text-[20px]">edit</span>
+                    </button>
+                    <button 
+                      *ngIf="employee.isActive"
+                      type="button"
+                      (click)="onDeactivate(employee)"
+                      class="text-orange-600 hover:text-orange-700 transition-colors">
+                      <span class="material-symbols-outlined text-[20px]">block</span>
+                    </button>
+                    <button 
+                      *ngIf="!employee.isActive"
+                      type="button"
+                      (click)="onActivate(employee)"
+                      class="text-green-600 hover:text-green-700 transition-colors">
+                      <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Pagination -->
+        <div *ngIf="totalCount > pageSize" class="px-4 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+          <div class="text-sm text-slate-500 dark:text-slate-400">
+            Showing {{ (page - 1) * pageSize + 1 }} to {{ Math.min(page * pageSize, totalCount) }} of {{ totalCount }} employees
+          </div>
+          <div class="flex gap-2">
+            <button 
+              type="button"
+              (click)="onPageChange(page - 1)"
+              [disabled]="page === 1"
+              class="px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+              Previous
+            </button>
+            <button 
+              type="button"
+              (click)="onPageChange(page + 1)"
+              [disabled]="page * pageSize >= totalCount"
+              class="px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</app-layout>
+
+<!-- Create Employee Modal -->
+<div *ngIf="showCreateModal" class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+  <div class="flex min-h-screen items-center justify-center p-4">
+    <div class="fixed inset-0 bg-black/25 backdrop-blur-sm transition-opacity" (click)="closeCreateModal()"></div>
+    <div class="relative w-full max-w-lg transform rounded-xl bg-white dark:bg-slate-900 shadow-2xl transition-all">
+      <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Add New Employee</h3>
+        <button type="button" (click)="closeCreateModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+          <span class="material-symbols-outlined text-[24px]">close</span>
+        </button>
+      </div>
+      <form [formGroup]="employeeForm" (ngSubmit)="onCreateSubmit()" class="p-6 space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Employee ID</label>
+            <input type="text" formControlName="employeeId" required
+              class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Department</label>
+            <input type="text" formControlName="department" required
+              class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">First Name</label>
+            <input type="text" formControlName="firstName" required
+              class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Last Name</label>
+            <input type="text" formControlName="lastName" required
+              class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
+          <input type="email" formControlName="email" required
+            class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Phone Number</label>
+          <input type="tel" formControlName="phoneNumber"
+            class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Start Date</label>
+            <input type="date" formControlName="startDate"
+              class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Location</label>
+            <select formControlName="workLocationId"
+              class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
+              <option value="">Select Location</option>
+              <option *ngFor="let location of locations" [value]="location.id">{{ location.building }} - {{ location.room }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex justify-end gap-3 pt-4">
+          <button type="button" (click)="closeCreateModal()"
+            class="px-4 py-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+            Cancel
+          </button>
+          <button type="submit" [disabled]="!employeeForm.valid"
+            class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            Create Employee
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Employee Modal -->
+<div *ngIf="showEditModal" class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+  <div class="flex min-h-screen items-center justify-center p-4">
+    <div class="fixed inset-0 bg-black/25 backdrop-blur-sm transition-opacity" (click)="closeEditModal()"></div>
+    <div class="relative w-full max-w-lg transform rounded-xl bg-white dark:bg-slate-900 shadow-2xl transition-all">
+      <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Edit Employee</h3>
+        <button type="button" (click)="closeEditModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+          <span class="material-symbols-outlined text-[24px]">close</span>
+        </button>
+      </div>
+      <form [formGroup]="employeeForm" (ngSubmit)="onEditSubmit()" class="p-6 space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Employee ID</label>
+            <input type="text" formControlName="employeeId" required
+              class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Department</label>
+            <input type="text" formControlName="department" required
+              class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">First Name</label>
+            <input type="text" formControlName="firstName" required
+              class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Last Name</label>
+            <input type="text" formControlName="lastName" required
+              class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
+          <input type="email" formControlName="email" required
+            class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Phone Number</label>
+          <input type="tel" formControlName="phoneNumber"
+            class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Start Date</label>
+            <input type="date" formControlName="startDate"
+              class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Location</label>
+            <select formControlName="workLocationId"
+              class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
+              <option value="">Select Location</option>
+              <option *ngFor="let location of locations" [value]="location.id">{{ location.building }} - {{ location.room }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex justify-end gap-3 pt-4">
+          <button type="button" (click)="closeEditModal()"
+            class="px-4 py-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+            Cancel
+          </button>
+          <button type="submit" [disabled]="!employeeForm.valid"
+            class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+            Update Employee
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- View Employee Modal -->
+<div *ngIf="showViewModal && selectedEmployee" class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+  <div class="flex min-h-screen items-center justify-center p-4">
+    <div class="fixed inset-0 bg-black/25 backdrop-blur-sm transition-opacity" (click)="closeViewModal()"></div>
+    <div class="relative w-full max-w-lg transform rounded-xl bg-white dark:bg-slate-900 shadow-2xl transition-all">
+      <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Employee Details</h3>
+        <button type="button" (click)="closeViewModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
+          <span class="material-symbols-outlined text-[24px]">close</span>
+        </button>
+      </div>
+      <div class="p-6 space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Employee ID</label>
+            <p class="text-slate-900 dark:text-white">{{ selectedEmployee.employeeId }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Department</label>
+            <p class="text-slate-900 dark:text-white">{{ selectedEmployee.department }}</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">First Name</label>
+            <p class="text-slate-900 dark:text-white">{{ selectedEmployee.firstName }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Last Name</label>
+            <p class="text-slate-900 dark:text-white">{{ selectedEmployee.lastName }}</p>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
+          <p class="text-slate-900 dark:text-white">{{ selectedEmployee.fullName }}</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
+          <p class="text-slate-900 dark:text-white">{{ selectedEmployee.email }}</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Phone Number</label>
+          <p class="text-slate-900 dark:text-white">{{ selectedEmployee.phoneNumber || 'N/A' }}</p>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Start Date</label>
+            <p class="text-slate-900 dark:text-white">{{ selectedEmployee.startDate | date:'mediumDate' }}</p>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label>
+            <span class="px-2 py-1 text-xs font-medium rounded-full" [ngClass]="selectedEmployee.isActive ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'">
+              {{ selectedEmployee.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Location</label>
+          <p class="text-slate-900 dark:text-white">{{ selectedEmployee.workLocation?.building }} - {{ selectedEmployee.workLocation?.room || 'N/A' }}</p>
+        </div>
+        <div class="flex justify-end gap-3 pt-4">
+          <button type="button" (click)="closeViewModal()"
+            class="px-4 py-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
+            Close
+          </button>
+          <button type="button" (click)="openEditModal(selectedEmployee); closeViewModal()"
+            class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors">
+            Edit Employee
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confirmation Modal -->
+<app-confirmation-modal
+  [show]="showConfirmationModal"
+  [data]="confirmationData"
+  (confirmed)="onConfirmationConfirmed()"
+  (cancelled)="onConfirmationCancelled()">
+</app-confirmation-modal>
+
+<!-- Reactivation Confirmation Modal -->
+<app-confirmation-modal
+  [show]="showReactivationModal"
+  [data]="reactivationData"
+  (confirmed)="onReactivationConfirmed()"
+  (cancelled)="onReactivationCancelled()">
+</app-confirmation-modal>
