@@ -1,15 +1,17 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { UserService } from '../core/services/user.service';
 import { AlertService } from '../core/services/alert.service';
 import { AuthService } from '../core/services/auth.service';
-import { UserDto } from '../core/models/auth.models';
-import { CreateUserRequest, UpdateUserRequest } from '../core/models/user.models';
+import { UserDto, CreateUserRequest, UpdateUserRequest } from '../core/models/user.models';
+import { PaginatedUsers } from '../core/services/user.service';
 import { UserRole } from '../core/models/enums';
 import { LayoutComponent } from '../shared/layout/layout.component';
 import { ConfirmationModalComponent, ConfirmationData } from '../shared/confirmation-modal/confirmation-modal.component';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-admin',
@@ -18,7 +20,8 @@ import { ConfirmationModalComponent, ConfirmationData } from '../shared/confirma
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.scss'
 })
-export class AdminComponent implements OnInit {
+export class AdminComponent implements OnInit, OnDestroy {
+  private readonly destroy$ = new Subject<void>();
   users: UserDto[] = [];
   searchTerm: string = '';
   roleFilter: UserRole | null = null;
@@ -50,7 +53,8 @@ export class AdminComponent implements OnInit {
     private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private cdr: ChangeDetectorRef
   ) {
     this.userForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -69,11 +73,18 @@ export class AdminComponent implements OnInit {
   ngOnInit(): void {
     this.loadUsers();
     
-    this.route.queryParams.subscribe(params => {
-      if (params['action'] === 'create') {
-        this.openCreateModal();
-      }
-    });
+    this.route.queryParams
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(params => {
+        if (params['action'] === 'create') {
+          this.openCreateModal();
+        }
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   loadUsers(): void {
@@ -85,9 +96,9 @@ export class AdminComponent implements OnInit {
       page: this.page,
       pageSize: this.pageSize
     }).subscribe({
-      next: (users: UserDto[]) => {
-        this.users = users;
-        this.totalCount = parseInt(localStorage.getItem('X-Total-Count') || '0');
+      next: (result: PaginatedUsers) => {
+        this.users = result.users;
+        this.totalCount = result.totalCount;
         this.isLoading = false;
       },
       error: (error: any) => {
@@ -115,10 +126,12 @@ export class AdminComponent implements OnInit {
     this.userForm.get('password')?.setValidators([Validators.required, Validators.minLength(6)]);
     this.userForm.get('password')?.updateValueAndValidity();
     this.showCreateModal = true;
+    this.cdr.detectChanges();
   }
 
   closeCreateModal(): void {
     this.showCreateModal = false;
+    this.cdr.detectChanges();
   }
 
   openEditModal(user: UserDto): void {
@@ -133,22 +146,28 @@ export class AdminComponent implements OnInit {
     this.userForm.get('password')?.clearValidators();
     this.userForm.get('password')?.updateValueAndValidity();
     this.showEditModal = true;
+    this.cdr.detectChanges();
   }
 
   closeEditModal(): void {
     this.showEditModal = false;
     this.selectedUser = undefined;
+    this.cdr.detectChanges();
   }
 
   openPasswordResetModal(user: UserDto): void {
+    console.log('Opening password reset modal for user:', user.fullName);
     this.selectedUser = user;
     this.passwordResetForm.reset();
     this.showPasswordResetModal = true;
+    console.log('showPasswordResetModal set to:', this.showPasswordResetModal);
+    this.cdr.detectChanges();
   }
 
   closePasswordResetModal(): void {
     this.showPasswordResetModal = false;
     this.selectedUser = undefined;
+    this.cdr.detectChanges();
   }
 
   onCreateSubmit(): void {
@@ -220,6 +239,7 @@ export class AdminComponent implements OnInit {
   }
 
   onToggleStatus(user: UserDto): void {
+    console.log('Toggling status for user:', user.fullName);
     const action = user.isActive ? 'deactivate' : 'activate';
     const actionTitle = user.isActive ? 'Deactivate User' : 'Activate User';
     const actionMessage = user.isActive 
@@ -251,6 +271,8 @@ export class AdminComponent implements OnInit {
     };
 
     this.showConfirmationModal = true;
+    console.log('showConfirmationModal set to:', this.showConfirmationModal);
+    this.cdr.detectChanges();
   }
 
   onConfirmationConfirmed(): void {
@@ -259,12 +281,14 @@ export class AdminComponent implements OnInit {
       this.pendingAction();
       this.pendingAction = undefined;
     }
+    this.cdr.detectChanges();
   }
 
   onConfirmationCancelled(): void {
     this.showConfirmationModal = false;
     this.pendingAction = undefined;
     this.confirmationData = undefined;
+    this.cdr.detectChanges();
   }
 
   onPageChange(page: number): void {

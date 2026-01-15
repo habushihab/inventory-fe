@@ -1,202 +1,247 @@
 <app-layout currentRoute="/dashboard">
   <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
     <div class="max-w-7xl mx-auto flex flex-col gap-6 lg:gap-8">
-        <!-- Page Heading & Actions -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Overview</h1>
-            <p class="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-1">Welcome back, here's what's happening with your inventory today.</p>
-          </div>
-          <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            <button 
-              type="button"
-              (click)="onAssignAsset()"
-              class="inline-flex items-center gap-2 justify-center rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all">
-              <span class="material-symbols-outlined text-[20px]">assignment_add</span>
-              <span class="hidden sm:inline">Assign Asset</span>
-              <span class="sm:hidden">Assign</span>
-            </button>
-            <button 
-              type="button"
-              (click)="onAddNewAsset()"
-              class="inline-flex items-center gap-2 justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all">
-              <span class="material-symbols-outlined text-[20px]">add</span>
-              <span class="hidden sm:inline">Add New Asset</span>
-              <span class="sm:hidden">Add Asset</span>
-            </button>
+      <!-- Page Heading & Actions -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Dashboard</h1>
+          <p class="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-1">Welcome back! Here's your inventory overview.</p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <button
+            *ngIf="permissions.canAssignAsset()"
+            type="button"
+            (click)="onAssignAsset()"
+            class="inline-flex items-center gap-2 justify-center rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-all">
+            <span class="material-symbols-outlined text-[20px]">assignment_add</span>
+            <span class="hidden sm:inline">Assign Asset</span>
+          </button>
+          <button
+            *ngIf="permissions.canCreateAsset()"
+            type="button"
+            (click)="onAddNewAsset()"
+            class="inline-flex items-center gap-2 justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-600 transition-all">
+            <span class="material-symbols-outlined text-[20px]">add</span>
+            <span class="hidden sm:inline">Add New Asset</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Key Metrics Row -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <!-- Total Assets -->
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark p-4 shadow-sm">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <span class="material-symbols-outlined text-primary text-[20px]">inventory_2</span>
+            </div>
+            <div>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Total Assets</p>
+              <p class="text-xl font-bold text-slate-900 dark:text-white">{{ getTotalAssets() }}</p>
+            </div>
           </div>
         </div>
 
-        <!-- Stats Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <!-- Stat Card 1 -->
-          <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark p-4 sm:p-6 shadow-sm flex flex-col justify-between h-28 sm:h-32 relative overflow-hidden group">
-            <div class="flex items-start justify-between z-10">
-              <div>
-                <p class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Total Assets</p>
-                <p class="mt-1 sm:mt-2 text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{{ getTotalAssets().toLocaleString() }}</p>
-              </div>
-              <div class="p-1.5 sm:p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-primary">
-                <span class="material-symbols-outlined text-[18px] sm:text-[20px]">inventory_2</span>
-              </div>
+        <!-- Available -->
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark p-4 shadow-sm">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+              <span class="material-symbols-outlined text-green-600 text-[20px]">check_circle</span>
             </div>
-            <div class="flex items-center gap-1 mt-2 z-10">
-              <span class="material-symbols-outlined text-green-500 text-sm">trending_up</span>
-              <span class="text-xs font-medium text-green-600 dark:text-green-400">+12% from last month</span>
+            <div>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Available</p>
+              <p class="text-xl font-bold text-green-600">{{ getAvailableAssets() }}</p>
             </div>
-            <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-primary/5 rounded-full group-hover:bg-primary/10 transition-colors"></div>
-          </div>
-
-          <!-- Stat Card 2 -->
-          <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark p-4 sm:p-6 shadow-sm flex flex-col justify-between h-28 sm:h-32 relative overflow-hidden group">
-            <div class="flex items-start justify-between z-10">
-              <div>
-                <p class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Available Assets</p>
-                <p class="mt-1 sm:mt-2 text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{{ getAvailableAssets().toLocaleString() }}</p>
-              </div>
-              <div class="p-1.5 sm:p-2 bg-green-50 dark:bg-green-900/20 rounded-lg text-green-600 dark:text-green-400">
-                <span class="material-symbols-outlined text-[18px] sm:text-[20px]">check_circle</span>
-              </div>
-            </div>
-            <div class="flex items-center gap-1 mt-2 z-10">
-              <span class="text-xs font-medium text-green-600 dark:text-green-400">{{ getUtilizationRate() }}% utilization rate</span>
-            </div>
-            <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-green-500/5 rounded-full group-hover:bg-green-500/10 transition-colors"></div>
-          </div>
-
-          <!-- Stat Card 3 -->
-          <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark p-4 sm:p-6 shadow-sm flex flex-col justify-between h-28 sm:h-32 relative overflow-hidden group">
-            <div class="flex items-start justify-between z-10">
-              <div>
-                <p class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Assigned Assets</p>
-                <p class="mt-1 sm:mt-2 text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{{ getAssignedAssets().toLocaleString() }}</p>
-              </div>
-              <div class="p-1.5 sm:p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-blue-600 dark:text-blue-400">
-                <span class="material-symbols-outlined text-[18px] sm:text-[20px]">assignment_ind</span>
-              </div>
-            </div>
-            <div class="flex items-center gap-1 mt-2 z-10">
-              <span class="text-xs font-medium text-orange-600 dark:text-orange-400" *ngIf="getPendingReturns() > 0">{{ getPendingReturns() }} overdue returns</span>
-              <span class="text-xs font-medium text-green-600 dark:text-green-400" *ngIf="getPendingReturns() === 0">All on time</span>
-            </div>
-            <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full group-hover:bg-blue-500/10 transition-colors"></div>
-          </div>
-
-          <!-- Stat Card 4 -->
-          <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark p-4 sm:p-6 shadow-sm flex flex-col justify-between h-28 sm:h-32 relative overflow-hidden group">
-            <div class="flex items-start justify-between z-10">
-              <div>
-                <p class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Warranty Expiring</p>
-                <p class="mt-1 sm:mt-2 text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{{ getWarrantyExpiringAssets() }}</p>
-              </div>
-              <div class="p-1.5 sm:p-2 bg-red-50 dark:bg-red-900/20 rounded-lg text-red-600 dark:text-red-400">
-                <span class="material-symbols-outlined text-[18px] sm:text-[20px]">schedule</span>
-              </div>
-            </div>
-            <div class="flex items-center gap-1 mt-2 z-10">
-              <span class="text-xs font-medium text-red-600 dark:text-red-400" *ngIf="getWarrantyExpiringAssets() > 0">Next 30 days</span>
-              <span class="text-xs font-medium text-green-600 dark:text-green-400" *ngIf="getWarrantyExpiringAssets() === 0">All current</span>
-            </div>
-            <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-red-500/5 rounded-full group-hover:bg-red-500/10 transition-colors"></div>
           </div>
         </div>
 
-        <!-- Main Content Columns -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-          <!-- Chart Section (Takes up 2/3) -->
-          <div class="lg:col-span-2 flex flex-col rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark shadow-sm">
-            <div class="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center gap-4">
-              <div>
-                <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Assets Distribution</h3>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">By department assignments and categories</p>
-              </div>
-              <button 
-                type="button"
-                (click)="onViewReport()"
-                class="text-xs sm:text-sm text-primary font-medium hover:underline whitespace-nowrap">View Report</button>
+        <!-- Assigned -->
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark p-4 shadow-sm">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <span class="material-symbols-outlined text-blue-600 text-[20px]">assignment_ind</span>
             </div>
-            <div class="p-4 sm:p-6 flex-1 flex flex-col justify-end min-h-[280px] sm:min-h-[320px]">
-              <!-- Tabs for switching between views -->
-              <div class="flex gap-2 mb-4">
-                <button 
-                  (click)="setChartView('department')" 
-                  [class]="'px-3 py-1 text-xs font-medium rounded transition-colors ' + (chartView === 'department' ? 'bg-primary text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300')">
-                  By Department
-                </button>
-                <button 
-                  (click)="setChartView('category')" 
-                  [class]="'px-3 py-1 text-xs font-medium rounded transition-colors ' + (chartView === 'category' ? 'bg-primary text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300')">
-                  By Category
-                </button>
-              </div>
-
-              <!-- CSS-only Bar Chart Simulation -->
-              <div class="flex items-end justify-between gap-2 sm:gap-4 h-48 sm:h-64 w-full">
-                <!-- Y-Axis Labels (Visual Only) -->
-                <div class="flex flex-col justify-between h-full text-xs text-slate-400 font-medium pb-6">
-                  <span>{{ getMaxChartValue() }}</span>
-                  <span>{{ Math.floor(getMaxChartValue() * 0.75) }}</span>
-                  <span>{{ Math.floor(getMaxChartValue() * 0.5) }}</span>
-                  <span>{{ Math.floor(getMaxChartValue() * 0.25) }}</span>
-                  <span>0</span>
-                </div>
-
-                <!-- Bars -->
-                <div class="flex flex-1 items-end justify-around h-full gap-1 sm:gap-2 border-l border-b border-slate-100 dark:border-slate-700 pb-2 pl-2">
-                  <div *ngFor="let item of getCurrentChartData(); let i = index" class="flex flex-col items-center gap-1 sm:gap-2 group w-full">
-                    <div 
-                      class="w-8 sm:w-12 bg-primary/80 group-hover:bg-primary rounded-t-sm transition-all relative" 
-                      [style.height.%]="getChartItemHeight(item.count)"
-                    >
-                      <div class="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded transition-opacity whitespace-nowrap">{{ item.count }} assets</div>
-                    </div>
-                    <span class="text-xs text-slate-500 font-medium text-center">{{ getChartItemLabel(item) }}</span>
-                  </div>
-                  <div *ngIf="getCurrentChartData().length === 0" class="flex items-center justify-center h-full text-slate-400 text-sm">
-                    No data available
-                  </div>
-                </div>
-              </div>
+            <div>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Assigned</p>
+              <p class="text-xl font-bold text-blue-600">{{ getAssignedAssets() }}</p>
             </div>
           </div>
+        </div>
 
-          <!-- Recent Activity List (Takes up 1/3) -->
-          <div class="flex flex-col rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark shadow-sm">
-            <div class="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800">
-              <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Recent Activity</h3>
+        <!-- Maintenance -->
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark p-4 shadow-sm">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+              <span class="material-symbols-outlined text-yellow-600 text-[20px]">build</span>
             </div>
-            <div class="flex-1 overflow-y-auto max-h-[400px]">
-              <div *ngIf="recentActivities.length === 0 && !isLoading" class="p-8 text-center text-slate-400 text-sm">
-                No recent activity
-              </div>
-              <div *ngIf="isLoading" class="p-8 text-center text-slate-400 text-sm">
-                Loading...
-              </div>
-              <div *ngIf="recentActivities.length > 0" class="divide-y divide-slate-100 dark:divide-slate-800">
-                <div *ngFor="let activity of recentActivities" class="p-3 sm:p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex gap-3 sm:gap-4 items-start">
-                  <div class="h-10 w-10 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0 text-primary">
-                    <span class="material-symbols-outlined text-[20px]">assignment</span>
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-slate-900 dark:text-white truncate">{{ activity.assetName }} Assigned</p>
-                    <p class="text-xs text-slate-500 mt-0.5">To {{ activity.employeeName }}</p>
-                  </div>
-                  <span class="text-xs text-slate-400 whitespace-nowrap">{{ formatTimeAgo(activity.assignedDate) }}</span>
-                </div>
-              </div>
+            <div>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Maintenance</p>
+              <p class="text-xl font-bold text-yellow-600">{{ getMaintenanceAssets() }}</p>
             </div>
-            <div class="p-3 sm:p-4 border-t border-slate-100 dark:border-slate-800">
-              <button 
-                type="button"
-                (click)="onViewAllActivity()"
-                class="w-full text-center text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors">View All Activity</button>
+          </div>
+        </div>
+
+        <!-- Overdue -->
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark p-4 shadow-sm">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
+              <span class="material-symbols-outlined text-red-600 text-[20px]">warning</span>
+            </div>
+            <div>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Overdue</p>
+              <p class="text-xl font-bold text-red-600">{{ getPendingReturns() }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lost -->
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark p-4 shadow-sm">
+          <div class="flex items-center gap-3">
+            <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
+              <span class="material-symbols-outlined text-slate-600 text-[20px]">search_off</span>
+            </div>
+            <div>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Lost</p>
+              <p class="text-xl font-bold text-slate-600">{{ getLostAssets() }}</p>
             </div>
           </div>
         </div>
       </div>
 
-      <footer class="mt-12 mb-6 text-center">
-        <p class="text-xs text-slate-400">© 2026 MadfoatCom Corp. All rights reserved.</p>
-      </footer>
+      <!-- Summary Cards Row -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Total Asset Value -->
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/10 p-6 shadow-sm">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Total Asset Value</p>
+              <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">{{ formatCurrency(getTotalAssetValue()) }}</p>
+            </div>
+            <div class="p-3 bg-primary/20 rounded-full">
+              <span class="material-symbols-outlined text-primary text-[24px]">payments</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Utilization Rate -->
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-green-500/10 to-green-500/5 dark:from-green-500/20 dark:to-green-500/10 p-6 shadow-sm">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Utilization Rate</p>
+              <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">{{ getUtilizationRate() }}%</p>
+            </div>
+            <div class="p-3 bg-green-500/20 rounded-full">
+              <span class="material-symbols-outlined text-green-600 text-[24px]">speed</span>
+            </div>
+          </div>
+          <div class="mt-3 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+            <div class="h-full bg-green-500 rounded-full transition-all" [style.width.%]="getUtilizationRate()"></div>
+          </div>
+        </div>
+
+        <!-- Employees -->
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-purple-500/10 to-purple-500/5 dark:from-purple-500/20 dark:to-purple-500/10 p-6 shadow-sm">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Active Employees</p>
+              <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">{{ getTotalEmployees() }}</p>
+            </div>
+            <div class="p-3 bg-purple-500/20 rounded-full">
+              <span class="material-symbols-outlined text-purple-600 text-[24px]">group</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Warranty Expiring -->
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-orange-500/10 to-orange-500/5 dark:from-orange-500/20 dark:to-orange-500/10 p-6 shadow-sm">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Warranty Expiring</p>
+              <p class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">{{ getWarrantyExpiringAssets() }}</p>
+              <p class="text-xs text-slate-500 mt-1">Next 30 days</p>
+            </div>
+            <div class="p-3 bg-orange-500/20 rounded-full">
+              <span class="material-symbols-outlined text-orange-600 text-[24px]">schedule</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Section -->
+      <!-- Monthly Trends Chart -->
+      <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark shadow-sm">
+        <div class="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800">
+          <h3 class="text-base font-bold text-slate-900 dark:text-white">Monthly Trends</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Asset activity over the last 6 months</p>
+        </div>
+        <div class="p-4 sm:p-6">
+          <div class="flex items-center gap-4 mb-4 text-xs">
+            <div class="flex items-center gap-1">
+              <div class="w-3 h-3 bg-blue-500 rounded"></div>
+              <span class="text-slate-600 dark:text-slate-400">Created</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <div class="w-3 h-3 bg-green-500 rounded"></div>
+              <span class="text-slate-600 dark:text-slate-400">Assigned</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <div class="w-3 h-3 bg-orange-500 rounded"></div>
+              <span class="text-slate-600 dark:text-slate-400">Returned</span>
+            </div>
+          </div>
+          <div class="flex items-end justify-between gap-2 h-48">
+            <div *ngFor="let trend of getMonthlyTrends()" class="flex-1 flex flex-col items-center gap-1">
+              <div class="w-full flex flex-col gap-1 h-40 justify-end">
+                <div class="w-full bg-blue-500 rounded-t" [style.height.px]="getTrendBarHeight(trend.assetsCreated)" title="Created: {{ trend.assetsCreated }}"></div>
+                <div class="w-full bg-green-500" [style.height.px]="getTrendBarHeight(trend.assetsAssigned)" title="Assigned: {{ trend.assetsAssigned }}"></div>
+                <div class="w-full bg-orange-500 rounded-b" [style.height.px]="getTrendBarHeight(trend.assetsReturned)" title="Returned: {{ trend.assetsReturned }}"></div>
+              </div>
+              <span class="text-xs text-slate-500 font-medium">{{ trend.monthName }}</span>
+            </div>
+            <div *ngIf="getMonthlyTrends().length === 0" class="flex-1 flex items-center justify-center h-40 text-slate-400 text-sm">
+              No trend data available
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom Section -->
+      <!-- Recent Assignments -->
+      <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark shadow-sm">
+        <div class="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+          <h3 class="text-base font-bold text-slate-900 dark:text-white">Recent Activity</h3>
+          <button
+            type="button"
+            (click)="onViewAllActivity()"
+            class="text-xs text-primary font-medium hover:underline">View All</button>
+        </div>
+        <div class="divide-y divide-slate-100 dark:divide-slate-800 max-h-[400px] overflow-y-auto">
+          <div *ngIf="getRecentAssignments().length === 0 && !isLoading" class="p-8 text-center text-slate-400 text-sm">
+            No recent activity
+          </div>
+          <div *ngIf="isLoading" class="p-8 text-center text-slate-400 text-sm">
+            Loading...
+          </div>
+          <div *ngFor="let activity of getRecentAssignments()" class="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex gap-4 items-center">
+            <div class="h-10 w-10 rounded-full flex items-center justify-center shrink-0"
+                 [ngClass]="activity.actionType === 'Assigned' ? 'bg-green-50 dark:bg-green-900/20 text-green-600' : 'bg-orange-50 dark:bg-orange-900/20 text-orange-600'">
+              <span class="material-symbols-outlined text-[20px]">{{ activity.actionType === 'Assigned' ? 'assignment_turned_in' : 'assignment_return' }}</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-slate-900 dark:text-white truncate">{{ activity.assetName }}</p>
+              <p class="text-xs text-slate-500 mt-0.5">
+                {{ activity.actionType }} {{ activity.actionType === 'Assigned' ? 'to' : 'from' }} {{ activity.employeeName }}
+                <span *ngIf="activity.locationName" class="text-slate-400"> - {{ activity.locationName }}</span>
+              </p>
+            </div>
+            <span class="text-xs text-slate-400 whitespace-nowrap">{{ formatTimeAgo(activity.assignedDate) }}</span>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <footer class="mt-12 mb-6 text-center">
+      <p class="text-xs text-slate-400">© 2026 MadfoatCom. Restricted Access.</p>
+    </footer>
+  </div>
 </app-layout>

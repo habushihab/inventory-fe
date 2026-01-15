@@ -7,6 +7,7 @@ import { AssetService } from '../core/services/asset.service';
 import { EmployeeService } from '../core/services/employee.service';
 import { LocationService } from '../core/services/location.service';
 import { AlertService } from '../core/services/alert.service';
+import { PermissionsService } from '../core/services/permissions.service';
 import { AssignmentDto, CreateAssignmentRequest, ReturnAssignmentRequest } from '../core/models/assignment.models';
 import { AssetDto } from '../core/models/asset.models';
 import { AssetStatus } from '../core/models/enums';
@@ -59,7 +60,8 @@ export class AssignmentsComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private fb: FormBuilder,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    public permissions: PermissionsService
   ) {
     this.assignmentForm = this.fb.group({
       assetId: ['', Validators.required],

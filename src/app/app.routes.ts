@@ -9,6 +9,8 @@ import { ReportsComponent } from './reports/reports.component';
 import { AdminComponent } from './admin/admin.component';
 import { ProfileComponent } from './profile/profile.component';
 import { authGuard } from './core/guards/auth.guard';
+import { roleGuard } from './core/guards/role.guard';
+import { UserRole } from './core/models/enums';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
@@ -18,7 +20,17 @@ export const routes: Routes = [
   { path: 'employees', component: EmployeesComponent, canActivate: [authGuard] },
   { path: 'locations', component: LocationsComponent, canActivate: [authGuard] },
   { path: 'assignments', component: AssignmentsComponent, canActivate: [authGuard] },
-  { path: 'reports', component: ReportsComponent, canActivate: [authGuard] },
-  { path: 'admin', component: AdminComponent, canActivate: [authGuard] },
+  { 
+    path: 'reports', 
+    component: ReportsComponent, 
+    canActivate: [authGuard, roleGuard],
+    data: { roles: [UserRole.ITOfficer, UserRole.Admin] }
+  },
+  { 
+    path: 'admin', 
+    component: AdminComponent, 
+    canActivate: [authGuard, roleGuard],
+    data: { roles: [UserRole.Admin] }
+  },
   { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
 ];

@@ -17,8 +17,7 @@
         <div class="flex items-center gap-2">
           <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" [ngClass]="getRoleBadgeClass()">
             <span class="material-symbols-outlined text-[16px] mr-1">
-              {{ currentUser?.role === userRoles.Admin ? 'admin_panel_settings' : 
-                 currentUser?.role === userRoles.ITOfficer ? 'engineering' : 'visibility' }}
+              {{ getRoleIcon() }}
             </span>
             {{ getRoleName() }}
           </span>
@@ -41,7 +40,7 @@
               <span class="material-symbols-outlined">person</span>
               Profile Information
             </h2>
-            <button
+            <!-- <button
               type="button"
               (click)="toggleEditProfile()"
               class="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors"
@@ -52,7 +51,7 @@
                 {{ isEditingProfile ? 'close' : 'edit' }}
               </span>
               {{ isEditingProfile ? 'Cancel' : 'Edit' }}
-            </button>
+            </button> -->
           </div>
 
           <form [formGroup]="profileForm" (ngSubmit)="onUpdateProfile()">

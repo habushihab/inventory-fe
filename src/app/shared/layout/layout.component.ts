@@ -153,6 +153,31 @@ export class LayoutComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Role-based access control
+  canAccessPage(page: string): boolean {
+    if (!this.currentUser) return false;
+    const role = this.currentUser.role as unknown as string | number;
+    
+    switch (page) {
+      case 'admin':
+        // Only Admins can access user management
+        return role === UserRole.Admin || role === 'Admin';
+      case 'reports':
+        // IT Officers and Admins can access reports
+        return role === UserRole.Admin || role === 'Admin' ||
+               role === UserRole.ITOfficer || role === 'ITOfficer';
+      case 'dashboard':
+      case 'assets':
+      case 'employees':
+      case 'locations':
+      case 'assignments':
+        // All roles can view these pages
+        return true;
+      default:
+        return true;
+    }
+  }
+
   navigateToProfile(): void {
     this.userDropdownOpen = false;
     this.router.navigate(['/profile']);

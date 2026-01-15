@@ -4,6 +4,7 @@
       <div class="flex items-center justify-between">
         <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Locations</h1>
         <button 
+          *ngIf="permissions.canCreateLocation()"
           type="button"
           (click)="openCreateModal()"
           class="inline-flex items-center gap-2 justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-600 transition-all">
@@ -62,22 +63,23 @@
               {{ location.isActive ? 'Active' : 'Inactive' }}
             </span>
           </div>
-          <div class="flex gap-2 mt-4">
+          <div class="flex gap-2 mt-4" *ngIf="permissions.canEditLocation() || permissions.canDeactivateLocation()">
             <button 
+              *ngIf="permissions.canEditLocation()"
               type="button"
               (click)="openEditModal(location)"
               class="flex-1 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm">
               Edit
             </button>
             <button 
-              *ngIf="location.isActive"
+              *ngIf="permissions.canDeactivateLocation() && location.isActive"
               type="button"
               (click)="onDeactivate(location)"
               class="px-3 py-2 rounded-lg border border-orange-200 dark:border-orange-700 text-orange-700 dark:text-orange-300 hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors text-sm">
               Deactivate
             </button>
             <button 
-              *ngIf="!location.isActive"
+              *ngIf="permissions.canDeactivateLocation() && !location.isActive"
               type="button"
               (click)="onActivate(location)"
               class="px-3 py-2 rounded-lg border border-green-200 dark:border-green-700 text-green-700 dark:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors text-sm">

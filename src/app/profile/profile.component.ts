@@ -72,22 +72,56 @@ export class ProfileComponent implements OnInit {
   }
 
   getRoleName(): string {
-    if (!this.currentUser) return '';
-    switch (this.currentUser.role) {
-      case UserRole.Admin: return 'Administrator';
-      case UserRole.ITOfficer: return 'IT Officer';
-      case UserRole.Viewer: return 'Viewer';
-      default: return 'User';
+    if (!this.currentUser) return 'User';
+    const role = this.currentUser.role as unknown as string | number;
+    switch (role) {
+      case UserRole.Admin:
+      case 'Admin':
+        return 'Administrator';
+      case UserRole.ITOfficer:
+      case 'ITOfficer':
+        return 'IT Officer';
+      case UserRole.Viewer:
+      case 'Viewer':
+        return 'Viewer';
+      default:
+        return 'User';
     }
   }
 
   getRoleBadgeClass(): string {
-    if (!this.currentUser) return '';
-    switch (this.currentUser.role) {
-      case UserRole.Admin: return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';
-      case UserRole.ITOfficer: return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400';
-      case UserRole.Viewer: return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
+    if (!this.currentUser) return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
+    const role = this.currentUser.role as unknown as string | number;
+    switch (role) {
+      case UserRole.Admin:
+      case 'Admin':
+        return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';
+      case UserRole.ITOfficer:
+      case 'ITOfficer':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400';
+      case UserRole.Viewer:
+      case 'Viewer':
+        return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
+      default:
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
+    }
+  }
+
+  getRoleIcon(): string {
+    if (!this.currentUser) return 'visibility';
+    const role = this.currentUser.role as unknown as string | number;
+    switch (role) {
+      case UserRole.Admin:
+      case 'Admin':
+        return 'admin_panel_settings';
+      case UserRole.ITOfficer:
+      case 'ITOfficer':
+        return 'engineering';
+      case UserRole.Viewer:
+      case 'Viewer':
+        return 'visibility';
+      default:
+        return 'person';
     }
   }
 

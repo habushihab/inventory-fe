@@ -5,6 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { LocationService } from '../core/services/location.service';
 import { LocationDto, CreateLocationRequest } from '../core/models/location.models';
 import { AlertService } from '../core/services/alert.service';
+import { PermissionsService } from '../core/services/permissions.service';
 import { LayoutComponent } from '../shared/layout/layout.component';
 import { ConfirmationModalComponent, ConfirmationData } from '../shared/confirmation-modal/confirmation-modal.component';
 
@@ -37,7 +38,8 @@ export class LocationsComponent implements OnInit {
     private alertService: AlertService,
     private router: Router,
     private route: ActivatedRoute,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    public permissions: PermissionsService
   ) {
     this.locationForm = this.fb.group({
       building: ['', Validators.required],

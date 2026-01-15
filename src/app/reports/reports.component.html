@@ -1,81 +1,196 @@
 <app-layout currentRoute="/reports">
   <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
     <div class="max-w-7xl mx-auto flex flex-col gap-6">
-      <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Reports</h1>
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Reports</h1>
+      </div>
 
       <!-- Tabs -->
-      <div class="border-b border-slate-200 dark:border-slate-800">
-        <nav class="flex gap-4">
-          <button 
+      <div class="border-b border-slate-200 dark:border-slate-800 overflow-x-auto">
+        <nav class="flex gap-2 sm:gap-4 min-w-max">
+          <button
             type="button"
             (click)="onTabChange('summary')"
             [ngClass]="activeTab === 'summary' ? 'border-b-2 border-primary text-primary' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
-            class="px-4 py-2 font-medium transition-colors">
+            class="px-3 sm:px-4 py-2 font-medium transition-colors text-sm sm:text-base whitespace-nowrap">
             Summary
           </button>
-          <button 
+          <button
+            type="button"
+            (click)="onTabChange('category')"
+            [ngClass]="activeTab === 'category' ? 'border-b-2 border-primary text-primary' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
+            class="px-3 sm:px-4 py-2 font-medium transition-colors text-sm sm:text-base whitespace-nowrap">
+            By Category
+          </button>
+          <button
+            type="button"
+            (click)="onTabChange('condition')"
+            [ngClass]="activeTab === 'condition' ? 'border-b-2 border-primary text-primary' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
+            class="px-3 sm:px-4 py-2 font-medium transition-colors text-sm sm:text-base whitespace-nowrap">
+            By Condition
+          </button>
+          <button
             type="button"
             (click)="onTabChange('warranty')"
             [ngClass]="activeTab === 'warranty' ? 'border-b-2 border-primary text-primary' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
-            class="px-4 py-2 font-medium transition-colors">
+            class="px-3 sm:px-4 py-2 font-medium transition-colors text-sm sm:text-base whitespace-nowrap">
             Warranty Expiring
           </button>
-          <button 
+          <button
             type="button"
             (click)="onTabChange('lost')"
             [ngClass]="activeTab === 'lost' ? 'border-b-2 border-primary text-primary' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
-            class="px-4 py-2 font-medium transition-colors">
+            class="px-3 sm:px-4 py-2 font-medium transition-colors text-sm sm:text-base whitespace-nowrap">
             Lost/Unassigned
           </button>
-          <button 
+          <button
             *ngIf="isAdmin"
             type="button"
             (click)="onTabChange('audit')"
             [ngClass]="activeTab === 'audit' ? 'border-b-2 border-primary text-primary' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'"
-            class="px-4 py-2 font-medium transition-colors">
+            class="px-3 sm:px-4 py-2 font-medium transition-colors text-sm sm:text-base whitespace-nowrap">
             Audit Logs
           </button>
         </nav>
       </div>
 
       <!-- Summary Tab -->
-      <div *ngIf="activeTab === 'summary' && dashboardData" class="space-y-6">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 p-6">
-            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Total Assets</p>
-            <p class="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{{ dashboardData.totalAssets }}</p>
+      <div *ngIf="activeTab === 'summary'" class="space-y-6">
+        <div *ngIf="isLoading" class="text-center text-slate-400 py-8">Loading...</div>
+        <div *ngIf="!isLoading && dashboardData" class="space-y-6">
+          <!-- Stats Cards -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+              <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Total Assets</p>
+              <p class="mt-1 text-2xl font-bold text-slate-900 dark:text-white">{{ dashboardData.totalAssets }}</p>
+            </div>
+            <div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+              <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Available</p>
+              <p class="mt-1 text-2xl font-bold text-green-600">{{ dashboardData.availableAssets }}</p>
+            </div>
+            <div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+              <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Assigned</p>
+              <p class="mt-1 text-2xl font-bold text-blue-600">{{ dashboardData.assignedAssets }}</p>
+            </div>
+            <div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+              <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Maintenance</p>
+              <p class="mt-1 text-2xl font-bold text-yellow-600">{{ dashboardData.maintenanceAssets }}</p>
+            </div>
+            <div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+              <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Overdue</p>
+              <p class="mt-1 text-2xl font-bold text-red-600">{{ dashboardData.overdueAssets }}</p>
+            </div>
+            <div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+              <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Lost</p>
+              <p class="mt-1 text-2xl font-bold text-slate-600">{{ dashboardData.lostAssets }}</p>
+            </div>
           </div>
-          <div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 p-6">
-            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Available</p>
-            <p class="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{{ dashboardData.availableAssets }}</p>
-          </div>
-          <div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 p-6">
-            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Assigned</p>
-            <p class="mt-2 text-3xl font-bold text-slate-900 dark:text-white">{{ dashboardData.assignedAssets }}</p>
-          </div>
-          <div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 p-6">
-            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Overdue</p>
-            <p class="mt-2 text-3xl font-bold text-red-600 dark:text-red-400">{{ dashboardData.overdueAssets }}</p>
-          </div>
-        </div>
 
-        <!-- Assets by Department Chart -->
-        <div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 p-6">
-          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Assets by Department</h3>
-          <div class="flex items-end justify-around gap-4 h-64 border-l border-b border-slate-200 dark:border-slate-700 pb-2 pl-2">
-            <div *ngFor="let dept of dashboardData.assetsByDepartment" class="flex flex-col items-center gap-2 flex-1">
-              <div 
-                class="w-full bg-primary/80 hover:bg-primary rounded-t-sm transition-all relative" 
-                [style.height.%]="(dept.count / (dashboardData.totalAssets || 1)) * 100"
-              >
-                <div class="opacity-0 hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded transition-opacity">
-                  {{ dept.count }}
+          <!-- Additional Info Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-gradient-to-br from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/10 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
+              <div class="flex items-center gap-3">
+                <div class="p-2 bg-primary/20 rounded-lg">
+                  <span class="material-symbols-outlined text-primary text-[24px]">payments</span>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Total Asset Value</p>
+                  <p class="text-xl font-bold text-slate-900 dark:text-white">{{ formatCurrency(dashboardData.totalAssetValue) }}</p>
                 </div>
               </div>
-              <span class="text-xs text-slate-500 font-medium">{{ dept.department }}</span>
             </div>
-            <div *ngIf="dashboardData.assetsByDepartment.length === 0" class="flex items-center justify-center h-full text-slate-400 text-sm">
-              No data available
+            <div class="bg-gradient-to-br from-purple-500/10 to-purple-500/5 dark:from-purple-500/20 dark:to-purple-500/10 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
+              <div class="flex items-center gap-3">
+                <div class="p-2 bg-purple-500/20 rounded-lg">
+                  <span class="material-symbols-outlined text-purple-600 text-[24px]">group</span>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Active Employees</p>
+                  <p class="text-xl font-bold text-slate-900 dark:text-white">{{ dashboardData.totalEmployees }}</p>
+                </div>
+              </div>
+            </div>
+            <div class="bg-gradient-to-br from-green-500/10 to-green-500/5 dark:from-green-500/20 dark:to-green-500/10 rounded-xl border border-slate-200 dark:border-slate-800 p-6">
+              <div class="flex items-center gap-3">
+                <div class="p-2 bg-green-500/20 rounded-lg">
+                  <span class="material-symbols-outlined text-green-600 text-[24px]">location_on</span>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Active Locations</p>
+                  <p class="text-xl font-bold text-slate-900 dark:text-white">{{ dashboardData.totalLocations }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Assets by Department Chart -->
+          <div class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 p-6">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Assets by Department</h3>
+            <div class="flex items-end justify-around gap-4 h-64 border-l border-b border-slate-200 dark:border-slate-700 pb-2 pl-2">
+              <div *ngFor="let dept of dashboardData.assetsByDepartment" class="flex flex-col items-center gap-2 flex-1 group">
+                <div
+                  class="w-full max-w-16 bg-primary/80 group-hover:bg-primary rounded-t transition-all relative cursor-pointer"
+                  [style.height.%]="getBarHeight(dept.count, dashboardData.assetsByDepartment)"
+                >
+                  <div class="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded transition-opacity whitespace-nowrap z-10">
+                    {{ dept.count }} assets
+                  </div>
+                </div>
+                <span class="text-xs text-slate-500 font-medium text-center">{{ dept.department }}</span>
+              </div>
+              <div *ngIf="!dashboardData.assetsByDepartment || dashboardData.assetsByDepartment.length === 0" class="flex items-center justify-center h-full w-full text-slate-400 text-sm">
+                No department data available
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Category Tab -->
+      <div *ngIf="activeTab === 'category'" class="space-y-6">
+        <div *ngIf="isLoading" class="text-center text-slate-400 py-8">Loading...</div>
+        <div *ngIf="!isLoading && dashboardData" class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+          <div class="p-6 border-b border-slate-100 dark:border-slate-800">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Assets by Category</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Breakdown of assets by type</p>
+          </div>
+          <div class="p-6">
+            <div *ngIf="!dashboardData.assetsByCategory || dashboardData.assetsByCategory.length === 0" class="text-center text-slate-400 py-4">
+              No category data available
+            </div>
+            <div *ngFor="let cat of dashboardData.assetsByCategory" class="mb-4 last:mb-0">
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-sm font-medium text-slate-700 dark:text-slate-300">{{ getCategoryName(cat.category) }}</span>
+                <span class="text-sm font-bold text-slate-900 dark:text-white">{{ cat.count }}</span>
+              </div>
+              <div class="h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div class="h-full bg-primary rounded-full transition-all" [style.width.%]="(cat.count / dashboardData.totalAssets) * 100"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Condition Tab -->
+      <div *ngIf="activeTab === 'condition'" class="space-y-6">
+        <div *ngIf="isLoading" class="text-center text-slate-400 py-8">Loading...</div>
+        <div *ngIf="!isLoading && dashboardData" class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+          <div class="p-6 border-b border-slate-100 dark:border-slate-800">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Assets by Condition</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Health status of your inventory</p>
+          </div>
+          <div class="p-6">
+            <div *ngIf="!dashboardData.assetsByCondition || dashboardData.assetsByCondition.length === 0" class="text-center text-slate-400 py-4">
+              No condition data available
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+              <div *ngFor="let cond of dashboardData.assetsByCondition" class="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4 text-center">
+                <div class="w-12 h-12 mx-auto mb-2 rounded-full flex items-center justify-center" [ngClass]="getConditionColorClass(cond.condition)">
+                  <span class="material-symbols-outlined text-[24px]">{{ getConditionIcon(cond.condition) }}</span>
+                </div>
+                <p class="text-2xl font-bold text-slate-900 dark:text-white">{{ cond.count }}</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">{{ getConditionName(cond.condition) }}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -84,78 +199,127 @@
       <!-- Warranty Expiring Tab -->
       <div *ngIf="activeTab === 'warranty'">
         <div *ngIf="isLoading" class="text-center text-slate-400 py-8">Loading...</div>
-        <div *ngIf="!isLoading && warrantyExpiringAssets.length === 0" class="text-center text-slate-400 py-8">No assets with expiring warranty</div>
+        <div *ngIf="!isLoading && warrantyExpiringAssets.length === 0" class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 p-8 text-center">
+          <span class="material-symbols-outlined text-green-500 text-[48px] mb-2">verified</span>
+          <p class="text-slate-600 dark:text-slate-400">No assets with expiring warranty in the next 30 days</p>
+        </div>
         <div *ngIf="!isLoading && warrantyExpiringAssets.length > 0" class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-          <table class="w-full">
-            <thead class="bg-slate-50 dark:bg-slate-800/50">
-              <tr>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Asset</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Warranty Expiry</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Status</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-              <tr *ngFor="let asset of warrantyExpiringAssets" class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                <td class="px-4 py-3 text-sm text-slate-900 dark:text-white">{{ asset.manufacture }} {{ asset.model }}</td>
-                <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{{ asset.warrantyExpiry | date:'short' }}</td>
-                <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{{ getCategoryName(asset.category) }}</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+            <div>
+              <h3 class="font-bold text-slate-900 dark:text-white">Warranty Expiring Soon</h3>
+              <p class="text-sm text-slate-500">{{ warrantyExpiringAssets.length }} assets expiring in next 30 days</p>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-slate-50 dark:bg-slate-800/50">
+                <tr>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">ID</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Asset</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Category</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Warranty Expiry</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Days Left</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Assigned To</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tr *ngFor="let asset of warrantyExpiringAssets" class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                  <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-white">{{ asset.id }}</td>
+                  <td class="px-4 py-3 text-sm text-slate-900 dark:text-white">{{ asset.manufacture }} {{ asset.model }}</td>
+                  <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{{ getCategoryName(asset.category) }}</td>
+                  <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{{ asset.warrantyExpiry | date:'mediumDate' }}</td>
+                  <td class="px-4 py-3">
+                    <span class="px-2 py-1 text-xs font-medium rounded-full" [ngClass]="getDaysLeftClass(asset.warrantyExpiry)">
+                      {{ getDaysLeft(asset.warrantyExpiry) }} days
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{{ asset.currentAssignment?.employeeName || 'Unassigned' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
       <!-- Lost/Unassigned Tab -->
       <div *ngIf="activeTab === 'lost'">
         <div *ngIf="isLoading" class="text-center text-slate-400 py-8">Loading...</div>
-        <div *ngIf="!isLoading && lostUnassignedAssets.length === 0" class="text-center text-slate-400 py-8">No lost or unassigned assets</div>
+        <div *ngIf="!isLoading && lostUnassignedAssets.length === 0" class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 p-8 text-center">
+          <span class="material-symbols-outlined text-green-500 text-[48px] mb-2">check_circle</span>
+          <p class="text-slate-600 dark:text-slate-400">No lost or unassigned assets</p>
+        </div>
         <div *ngIf="!isLoading && lostUnassignedAssets.length > 0" class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-          <table class="w-full">
-            <thead class="bg-slate-50 dark:bg-slate-800/50">
-              <tr>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Asset ID</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Brand/Model</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Status</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Location</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-              <tr *ngFor="let asset of lostUnassignedAssets" class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-white">{{ asset.id }}</td>
-                <td class="px-4 py-3 text-sm text-slate-900 dark:text-white">{{ asset.manufacture }} {{ asset.model }}</td>
-                <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{{ getCategoryName(asset.category) }}</td>
-                <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{{ asset.currentEmployeeLocation || '-' }}</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="p-4 border-b border-slate-100 dark:border-slate-800">
+            <h3 class="font-bold text-slate-900 dark:text-white">Lost & Unassigned Assets</h3>
+            <p class="text-sm text-slate-500">{{ lostUnassignedAssets.length }} assets need attention</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-slate-50 dark:bg-slate-800/50">
+                <tr>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">ID</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Asset</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Category</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Status</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Last Updated</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tr *ngFor="let asset of lostUnassignedAssets" class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                  <td class="px-4 py-3 text-sm font-medium text-slate-900 dark:text-white">{{ asset.id }}</td>
+                  <td class="px-4 py-3 text-sm text-slate-900 dark:text-white">{{ asset.manufacture }} {{ asset.model }}</td>
+                  <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{{ getCategoryName(asset.category) }}</td>
+                  <td class="px-4 py-3">
+                    <span class="px-2 py-1 text-xs font-medium rounded-full" [ngClass]="getStatusClass(asset.status)">
+                      {{ getStatusName(asset.status) }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{{ asset.updatedAt | date:'mediumDate' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
       <!-- Audit Logs Tab -->
       <div *ngIf="activeTab === 'audit' && isAdmin">
         <div *ngIf="isLoading" class="text-center text-slate-400 py-8">Loading...</div>
-        <div *ngIf="!isLoading && auditLogs.length === 0" class="text-center text-slate-400 py-8">No audit logs found</div>
+        <div *ngIf="!isLoading && auditLogs.length === 0" class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 p-8 text-center">
+          <span class="material-symbols-outlined text-slate-400 text-[48px] mb-2">history</span>
+          <p class="text-slate-600 dark:text-slate-400">No audit logs found</p>
+        </div>
         <div *ngIf="!isLoading && auditLogs.length > 0" class="bg-surface-light dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-          <table class="w-full">
-            <thead class="bg-slate-50 dark:bg-slate-800/50">
-              <tr>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Timestamp</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Action</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Entity</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">User</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Description</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-              <tr *ngFor="let log of auditLogs" class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{{ log.timestamp | date:'short' }}</td>
-                <td class="px-4 py-3 text-sm text-slate-900 dark:text-white">{{ log.action }}</td>
-                <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{{ log.entityType }}</td>
-                <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{{ log.userName || log.userId }}</td>
-                <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{{ log.description || '-' }}</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="p-4 border-b border-slate-100 dark:border-slate-800">
+            <h3 class="font-bold text-slate-900 dark:text-white">Audit Trail</h3>
+            <p class="text-sm text-slate-500">Recent system activity</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead class="bg-slate-50 dark:bg-slate-800/50">
+                <tr>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Timestamp</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Action</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Entity</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">User</th>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Description</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                <tr *ngFor="let log of auditLogs" class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                  <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{{ log.timestamp | date:'medium' }}</td>
+                  <td class="px-4 py-3">
+                    <span class="px-2 py-1 text-xs font-medium rounded-full" [ngClass]="getActionClass(log.action)">
+                      {{ getActionName(log.action) }}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{{ log.entityType }} #{{ log.entityId }}</td>
+                  <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400">{{ log.userName || log.userId }}</td>
+                  <td class="px-4 py-3 text-sm text-slate-500 dark:text-slate-400 max-w-xs truncate">{{ log.description || '-' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

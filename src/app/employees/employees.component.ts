@@ -5,6 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { EmployeeService } from '../core/services/employee.service';
 import { LocationService } from '../core/services/location.service';
 import { AlertService } from '../core/services/alert.service';
+import { PermissionsService } from '../core/services/permissions.service';
 import { EmployeeDto, CreateEmployeeRequest } from '../core/models/employee.models';
 import { LocationDto } from '../core/models/location.models';
 import { LayoutComponent } from '../shared/layout/layout.component';
@@ -51,7 +52,8 @@ export class EmployeesComponent implements OnInit {
     private alertService: AlertService,
     private router: Router,
     private route: ActivatedRoute,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    public permissions: PermissionsService
   ) {
     this.employeeForm = this.fb.group({
       firstName: ['', Validators.required],

@@ -4,6 +4,7 @@
       <div class="flex items-center justify-between">
         <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Employees</h1>
         <button 
+          *ngIf="permissions.canCreateEmployee()"
           type="button"
           (click)="openCreateModal()"
           class="inline-flex items-center gap-2 justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-600 transition-all">
@@ -92,20 +93,21 @@
                       <span class="material-symbols-outlined text-[20px]">visibility</span>
                     </button>
                     <button 
+                      *ngIf="permissions.canEditEmployee()"
                       type="button"
                       (click)="openEditModal(employee)"
                       class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
                       <span class="material-symbols-outlined text-[20px]">edit</span>
                     </button>
                     <button 
-                      *ngIf="employee.isActive"
+                      *ngIf="permissions.canDeactivateEmployee() && employee.isActive"
                       type="button"
                       (click)="onDeactivate(employee)"
                       class="text-orange-600 hover:text-orange-700 transition-colors">
                       <span class="material-symbols-outlined text-[20px]">block</span>
                     </button>
                     <button 
-                      *ngIf="!employee.isActive"
+                      *ngIf="permissions.canDeactivateEmployee() && !employee.isActive"
                       type="button"
                       (click)="onActivate(employee)"
                       class="text-green-600 hover:text-green-700 transition-colors">
@@ -348,7 +350,10 @@
             class="px-4 py-2 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">
             Close
           </button>
-          <button type="button" (click)="openEditModal(selectedEmployee); closeViewModal()"
+          <button 
+            *ngIf="permissions.canEditEmployee()"
+            type="button" 
+            (click)="openEditModal(selectedEmployee); closeViewModal()"
             class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-colors">
             Edit Employee
           </button>

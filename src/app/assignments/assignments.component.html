@@ -5,6 +5,7 @@
         <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Assignments</h1>
         <div class="flex gap-2">
           <button 
+            *ngIf="permissions.canCreateAssignment()"
             type="button"
             (click)="openCreateModal()"
             class="inline-flex items-center gap-2 justify-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-600 transition-all">
@@ -127,7 +128,7 @@
                 </td>
                 <td class="px-4 py-3 text-right text-sm font-medium">
                   <button 
-                    *ngIf="assignment.isActive"
+                    *ngIf="permissions.canReturnAsset() && assignment.isActive"
                     type="button"
                     (click)="confirmUnassignAsset(assignment)"
                     class="text-orange-600 hover:text-orange-700 transition-colors">

@@ -1,8 +1,13 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { UserDto, CreateUserRequest, UpdateUserRequest, UserSearchRequest } from '../models/user.models';
+
+export interface PaginatedUsers {
+  users: UserDto[];
+  totalCount: number;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +16,7 @@ export class UserService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/users`;
 
-  getUsers(request: UserSearchRequest = {}): Observable<UserDto[]> {
+  getUsers(request: UserSearchRequest = {}): Observable<PaginatedUsers> {
     let params = new HttpParams();
     
     if (request.search) params = params.set('search', request.search);
@@ -20,7 +25,15 @@ export class UserService {
     if (request.page) params = params.set('page', request.page.toString());
     if (request.pageSize) params = params.set('pageSize', request.pageSize.toString());
 
-    return this.http.get<UserDto[]>(this.apiUrl, { params });
+    return this.http.get<UserDto[]>(this.apiUrl, { 
+      params, 
+      observe: 'response' 
+    }).pipe(
+      map((response: HttpResponse<UserDto[]>) => ({
+        users: response.body || [],
+        totalCount: parseInt(response.headers.get('X-Total-Count') || '0')
+      }))
+    );
   }
 
   getUser(id: string): Observable<UserDto> {

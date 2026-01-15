@@ -3,9 +3,9 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../core/services/auth.service';
 import { ReportService } from '../core/services/report.service';
-import { AssignmentService } from '../core/services/assignment.service';
-import { DashboardSummaryDto } from '../core/models/report.models';
-import { AssignmentDto } from '../core/models/assignment.models';
+import { PermissionsService } from '../core/services/permissions.service';
+import { DashboardSummaryDto, MonthlyTrendDto, AssetsByLocationDto, RecentAssignmentDto } from '../core/models/report.models';
+import { AssetCategory } from '../core/models/enums';
 import { UserDto } from '../core/models/auth.models';
 import { LayoutComponent } from '../shared/layout/layout.component';
 import { Subject } from 'rxjs';
@@ -21,30 +21,28 @@ import { takeUntil, finalize } from 'rxjs/operators';
 })
 export class DashboardComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
-  
+
   // Data properties
   dashboardData?: DashboardSummaryDto;
-  recentActivities: AssignmentDto[] = [];
   currentUser?: UserDto;
-  
+
   // Loading state
   isLoading = true;
 
   // Chart view state
-  chartView: 'department' | 'category' = 'department';
+  chartView: 'department' | 'category' = 'category';
 
   constructor(
     private readonly router: Router,
     private readonly authService: AuthService,
     private readonly reportService: ReportService,
-    private readonly assignmentService: AssignmentService,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    public readonly permissions: PermissionsService
   ) {}
 
   ngOnInit(): void {
     this.initializeUser();
     this.loadDashboardData();
-    this.loadRecentActivities();
   }
 
   ngOnDestroy(): void {
@@ -76,23 +74,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       });
   }
 
-  private loadRecentActivities(): void {
-    this.assignmentService.getAssignments(true, undefined, undefined, undefined, 1, 5)
-      .pipe(
-        takeUntil(this.destroy$)
-      )
-      .subscribe({
-        next: (assignments: AssignmentDto[]) => {
-          this.recentActivities = assignments;
-          this.cdr.markForCheck();
-        },
-        error: (error: any) => {
-          console.error('Error loading recent activities:', error);
-        }
-      });
-  }
-
-
   onAssignAsset(): void {
     this.router.navigate(['/assignments'], { queryParams: { action: 'create' } });
   }
@@ -109,6 +90,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.router.navigate(['/assignments']);
   }
 
+  // Basic getters
   getTotalAssets(): number {
     return this.dashboardData?.totalAssets || 0;
   }
@@ -119,6 +101,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   getAssignedAssets(): number {
     return this.dashboardData?.assignedAssets || 0;
+  }
+
+  getMaintenanceAssets(): number {
+    return this.dashboardData?.maintenanceAssets || 0;
+  }
+
+  getLostAssets(): number {
+    return this.dashboardData?.lostAssets || 0;
   }
 
   getUtilizationRate(): number {
@@ -134,12 +124,47 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return this.dashboardData?.warrantyExpiringAssets || 0;
   }
 
+  getTotalAssetValue(): number {
+    return this.dashboardData?.totalAssetValue || 0;
+  }
+
+  getTotalEmployees(): number {
+    return this.dashboardData?.totalEmployees || 0;
+  }
+
+  getTotalLocations(): number {
+    return this.dashboardData?.totalLocations || 0;
+  }
+
+  // Format currency
+  formatCurrency(value: number): string {
+    if (value >= 1000000) {
+      return (value / 1000000).toFixed(1) + 'M' + ' JOD';
+    } else if (value >= 1000) {
+      return (value / 1000).toFixed(1) + 'K' + ' JOD';
+    }
+    return value.toFixed(0) + ' JOD';
+  }
+
+  // Chart data getters
   getAssetValuationByDepartment(): any[] {
     return this.dashboardData?.assetsByDepartment || [];
   }
 
   getAssetsByCategory(): any[] {
     return this.dashboardData?.assetsByCategory || [];
+  }
+
+  getAssetsByLocation(): AssetsByLocationDto[] {
+    return this.dashboardData?.assetsByLocation || [];
+  }
+
+  getRecentAssignments(): RecentAssignmentDto[] {
+    return this.dashboardData?.recentAssignments || [];
+  }
+
+  getMonthlyTrends(): MonthlyTrendDto[] {
+    return this.dashboardData?.monthlyTrends || [];
   }
 
   // Chart helper methods
@@ -149,8 +174,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   getCurrentChartData(): any[] {
-    return this.chartView === 'department' 
-      ? this.getAssetValuationByDepartment() 
+    return this.chartView === 'department'
+      ? this.getAssetValuationByDepartment()
       : this.getAssetsByCategory();
   }
 
@@ -158,7 +183,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     const data = this.getCurrentChartData();
     if (data.length === 0) return 100;
     const max = Math.max(...data.map(item => item.count));
-    return Math.ceil(max / 10) * 10; // Round to nearest 10
+    return Math.ceil(max / 10) * 10 || 10;
   }
 
   getChartItemHeight(count: number): number {
@@ -168,21 +193,53 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   getChartItemLabel(item: any): string {
-    const label = item.department || item.category || 'Unknown';
-    return label.length > 8 ? label.substring(0, 8) + '...' : label;
+    let label: string;
+    if (item.department) {
+      label = item.department;
+    } else if (item.category !== undefined) {
+      // Convert category enum to readable name
+      label = AssetCategory[item.category] || 'Other';
+    } else {
+      label = 'Unknown';
+    }
+    return label.length > 10 ? label.substring(0, 10) + '...' : label;
   }
 
-  // Add Math to template context
-  Math = Math;
+  // Monthly trends chart helper
+  getTrendBarHeight(value: number): number {
+    const trends = this.getMonthlyTrends();
+    if (trends.length === 0) return 0;
 
+    const maxValue = Math.max(
+      ...trends.map(t => Math.max(t.assetsCreated, t.assetsAssigned, t.assetsReturned))
+    );
+
+    if (maxValue === 0) return 0;
+    return Math.max(4, (value / maxValue) * 40); // Min 4px, max 40px per bar
+  }
+
+  // Location bar helper
+  getLocationBarWidth(count: number): number {
+    const locations = this.getAssetsByLocation();
+    if (locations.length === 0) return 0;
+    const maxCount = Math.max(...locations.map(l => l.count));
+    if (maxCount === 0) return 0;
+    return (count / maxCount) * 100;
+  }
+
+  // Time formatting
   formatTimeAgo(date: string): string {
     const now = new Date();
     const activityDate = new Date(date);
     const diffInSeconds = Math.floor((now.getTime() - activityDate.getTime()) / 1000);
-    
-    if (diffInSeconds < 60) return `${diffInSeconds}m ago`;
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}h ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}d ago`;
-    return `${Math.floor(diffInSeconds / 86400)}d ago`;
+
+    if (diffInSeconds < 60) return 'Just now';
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    return activityDate.toLocaleDateString();
   }
+
+  // Math helper for template
+  Math = Math;
 }
