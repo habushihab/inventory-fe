@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -9,6 +9,7 @@ import { LocationService } from '../core/services/location.service';
 import { AlertService } from '../core/services/alert.service';
 import { AssignmentDto, CreateAssignmentRequest, ReturnAssignmentRequest } from '../core/models/assignment.models';
 import { AssetDto } from '../core/models/asset.models';
+import { AssetStatus } from '../core/models/enums';
 import { EmployeeDto } from '../core/models/employee.models';
 import { LocationDto } from '../core/models/location.models';
 import { LayoutComponent } from '../shared/layout/layout.component';
@@ -32,7 +33,17 @@ export class AssignmentsComponent implements OnInit {
   totalCount: number = 0;
   isLoading: boolean = false;
   showCreateModal: boolean = false;
-  showReturnModal: boolean = false;
+  
+  private _showReturnModal: boolean = false;
+  get showReturnModal(): boolean {
+    return this._showReturnModal;
+  }
+  set showReturnModal(value: boolean) {
+    console.log('📋 showReturnModal changing from', this._showReturnModal, 'to', value);
+    console.trace('📋 showReturnModal stack trace');
+    this._showReturnModal = value;
+  }
+  
   selectedAssignment?: AssignmentDto;
   
   assignmentForm: FormGroup;
@@ -47,7 +58,8 @@ export class AssignmentsComponent implements OnInit {
     private alertService: AlertService,
     private router: Router,
     private route: ActivatedRoute,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private cdr: ChangeDetectorRef
   ) {
     this.assignmentForm = this.fb.group({
       assetId: ['', Validators.required],
@@ -88,23 +100,37 @@ export class AssignmentsComponent implements OnInit {
     ).subscribe({
       next: (assignments) => {
         this.assignments = assignments;
+        console.log('📋 Loaded assignments:', assignments.length);
+        console.log('📋 Assignment details:', assignments);
         this.totalCount = parseInt(localStorage.getItem('X-Total-Count') || '0');
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error loading assignments:', error);
+        console.error('❌ Error loading assignments:', error);
         this.isLoading = false;
       }
     });
   }
 
   loadAssets(): void {
-    this.assetService.getAssets({ page: 1, pageSize: 1000, status: 1 }).subscribe({
+    this.assetService.getAssets({ page: 1, pageSize: 1000 }).subscribe({
       next: (assets) => {
-        this.assets = assets.filter(a => a.status === 1); // Only available assets
+        console.log('🔍 All loaded assets:', assets);
+        console.log('🔍 First asset status:', assets[0]?.status, 'Type:', typeof assets[0]?.status);
+        
+        // Handle both string and enum status values
+        this.assets = assets.filter(a => {
+          const statusAsString = (a.status as any);
+          const isAvailable = statusAsString === 'Available' || statusAsString === AssetStatus.Available || statusAsString === 1;
+          console.log('🔍 Asset', a.id, 'status:', a.status, 'statusAsString:', statusAsString, 'isAvailable:', isAvailable);
+          return isAvailable;
+        });
+        
+        console.log('✅ Filtered available assets:', this.assets.length, 'Total assets:', assets.length);
+        console.log('✅ Available assets:', this.assets);
       },
       error: (error) => {
-        console.error('Error loading assets:', error);
+        console.error('❌ Error loading assets:', error);
       }
     });
   }
@@ -137,6 +163,7 @@ export class AssignmentsComponent implements OnInit {
   }
 
   openCreateModal(): void {
+    console.log('➕ Opening create assignment modal');
     this.assignmentForm.reset();
     this.showCreateModal = true;
   }
@@ -145,12 +172,41 @@ export class AssignmentsComponent implements OnInit {
     this.showCreateModal = false;
   }
 
+  confirmUnassignAsset(assignment: AssignmentDto): void {
+      this.openReturnModal(assignment);
+  }
+
   openReturnModal(assignment: AssignmentDto): void {
-    this.selectedAssignment = assignment;
-    this.returnForm.reset({
-      actualReturnDate: new Date().toISOString().split('T')[0]
-    });
-    this.showReturnModal = true;
+    try {
+      console.log('🔄 Opening return modal for assignment:', assignment);
+      console.log('🔄 Before - Modal state:', this.showReturnModal);
+      
+      this.selectedAssignment = assignment;
+      this.returnForm.reset({
+        actualReturnDate: new Date().toISOString().split('T')[0]
+      });
+      
+      console.log('🔄 Return form valid after reset:', this.returnForm.valid);
+      console.log('🔄 Return form value after reset:', this.returnForm.value);
+      
+      console.log('🔄 Setting modal to true...');
+      this.showReturnModal = true;
+      
+      console.log('🔄 After - Modal state:', this.showReturnModal);
+      console.log('🔄 Selected assignment:', this.selectedAssignment);
+      
+      // Force multiple change detection cycles
+      this.cdr.detectChanges();
+      this.cdr.markForCheck();
+      
+      setTimeout(() => {
+        console.log('🔄 Timeout check - Modal state:', this.showReturnModal);
+        console.log('🔄 DOM element exists:', document.querySelector('[style*="position: absolute"]'));
+      }, 100);
+      
+    } catch (error) {
+      console.error('❌ Error in openReturnModal:', error);
+    }
   }
 
   closeReturnModal(): void {
@@ -182,6 +238,11 @@ export class AssignmentsComponent implements OnInit {
   }
 
   onReturnSubmit(): void {
+    console.log('🚨 onReturnSubmit called!');
+    console.log('🚨 Form valid:', this.returnForm.valid);
+    console.log('🚨 Form value:', this.returnForm.value);
+    console.log('🚨 Selected assignment:', this.selectedAssignment);
+    
     if (this.returnForm.valid && this.selectedAssignment) {
       const formValue = this.returnForm.value;
       const returnRequest: ReturnAssignmentRequest = {
@@ -189,6 +250,7 @@ export class AssignmentsComponent implements OnInit {
         returnNotes: formValue.returnNotes || undefined
       };
 
+      console.log('🚨 Making return request:', returnRequest);
       this.assignmentService.returnAssignment(this.selectedAssignment.id, returnRequest).subscribe({
         next: () => {
           this.closeReturnModal();
@@ -201,6 +263,8 @@ export class AssignmentsComponent implements OnInit {
           this.alertService.error('Return Failed', error.error?.message || 'Failed to return assignment. Please try again.');
         }
       });
+    } else {
+      console.log('🚨 Form invalid or no selected assignment - not submitting');
     }
   }
 

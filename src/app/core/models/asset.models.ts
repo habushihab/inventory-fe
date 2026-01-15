@@ -1,27 +1,33 @@
-import { AssetStatus, AssetCategory } from './enums';
+import { AssetStatus, AssetCategory, AssetCondition } from './enums';
 import { LocationDto } from './location.models';
 import { AssignmentDto } from './assignment.models';
 import { EmployeeDto } from './employee.models';
 
 export interface AssetDto {
   id: number;
-  assetId: string;
   barcode?: string;
-  qrCode?: string;
   category: AssetCategory;
-  brand: string;
+  manufacture: string;
   model: string;
   serialNumber?: string;
+  operatingSystem?: string;
   description?: string;
+  purpose?: string;
   purchaseDate?: string;
   purchasePrice?: number;
   warrantyExpiry?: string;
   status: AssetStatus;
-  notes?: string;
-  location?: LocationDto;
-  currentAssignment?: AssignmentDto;  // Changed from currentHolder to match backend
+  condition: AssetCondition;
+  warrantyStatus: string;
+  warrantyMonthsRemaining?: number;
+  currentEmployeeTitle?: string;
+  currentEmployeeDepartment?: string;
+  currentEmployeeLocation?: string;
+  currentAssignment?: AssignmentDto;
   createdAt: string;
   updatedAt: string;
+  createdBy?: string;
+  updatedBy?: string;
 }
 
 export interface AssetTimelineDto {
@@ -60,42 +66,43 @@ export enum AssetTimelineStatus {
 }
 
 export interface CreateAssetRequest {
-  assetId: string;
   barcode?: string;
   category: AssetCategory;
-  brand: string;
+  manufacture: string;
   model: string;
   serialNumber?: string;
+  operatingSystem?: string;
   description?: string;
+  purpose?: string;
   purchaseDate?: string;
   purchasePrice?: number;
   warrantyExpiry?: string;
-  status?: AssetStatus;
-  notes?: string;
-  locationId?: number;
+  status: AssetStatus;
+  condition: AssetCondition;
 }
 
 export interface UpdateAssetRequest {
   barcode?: string;
   category?: AssetCategory;
-  brand?: string;
+  manufacture?: string;
   model?: string;
   serialNumber?: string;
+  operatingSystem?: string;
   description?: string;
+  purpose?: string;
   purchaseDate?: string;
   purchasePrice?: number;
   warrantyExpiry?: string;
   status?: AssetStatus;
-  notes?: string;
-  locationId?: number;
+  condition?: AssetCondition;
 }
 
 export interface AssetSearchRequest {
   searchTerm?: string;
   category?: AssetCategory;
   status?: AssetStatus;
-  brand?: string;
-  locationId?: number;
+  condition?: AssetCondition;
+  manufacture?: string;
   employeeId?: number;
   hasWarrantyExpiring?: boolean;
   page?: number;

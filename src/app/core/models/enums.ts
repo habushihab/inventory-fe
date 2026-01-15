@@ -22,6 +22,15 @@ export enum AssetCategory {
   Other = 99
 }
 
+export enum AssetCondition {
+  VeryBad = 1,
+  Bad = 2,
+  Low = 3,
+  Good = 4,
+  VeryGood = 5,
+  New = 6
+}
+
 export enum UserRole {
   Viewer = 1,
   ITOfficer = 2,

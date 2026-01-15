@@ -13,7 +13,7 @@ import { AssetDto, AssetSearchRequest, AssetTimelineDto, AssetTimelineType, Asse
 import { LocationDto } from '../core/models/location.models';
 import { EmployeeDto } from '../core/models/employee.models';
 import { CreateAssignmentRequest } from '../core/models/assignment.models';
-import { AssetStatus, AssetCategory, UserRole } from '../core/models/enums';
+import { AssetStatus, AssetCategory, AssetCondition, UserRole } from '../core/models/enums';
 import { LayoutComponent } from '../shared/layout/layout.component';
 import { ConfirmationModalComponent } from '../shared/confirmation-modal/confirmation-modal.component';
 import { ResponsiveTableComponent, TableColumn, TableAction } from '../shared/components/responsive-table/responsive-table.component';
@@ -39,12 +39,12 @@ export class AssetsComponent implements OnInit, OnDestroy {
   
   // Table configuration
   tableColumns: TableColumn[] = [
-    { key: 'assetId', label: 'Asset ID', sortable: true, width: '32' },
+    { key: 'id', label: 'ID', sortable: true, width: '32' },
     { key: 'category', label: 'Category', type: 'badge', sortable: true, tabletHidden: true },
-    { key: 'brand', label: 'Brand', sortable: true },
+    { key: 'manufacture', label: 'Manufacture', sortable: true },
     { key: 'model', label: 'Model', sortable: true, mobileHidden: true },
     { key: 'status', label: 'Status', type: 'badge', sortable: true },
-    { key: 'location', label: 'Location', mobileHidden: true, format: (item) => item?.locationName || 'Unassigned' },
+    { key: 'location', label: 'Location', mobileHidden: true, format: (item) => item?.currentEmployeeLocation || 'Unassigned' },
     { key: 'assignedTo', label: 'Assigned To', mobileHidden: true, tabletHidden: true },
     { key: 'createdAt', label: 'Created', type: 'date', mobileHidden: true, tabletHidden: true }
   ];
@@ -59,6 +59,7 @@ export class AssetsComponent implements OnInit, OnDestroy {
   showEditModal: boolean = false;
   showViewModal: boolean = false;
   showAssignModal: boolean = false;
+  showNewAssignmentModal: boolean = false;
   selectedAsset?: AssetDto;
   assetTimeline: AssetTimelineDto[] = [];
   selectedAssetTimeline: AssetTimelineDto[] = [];
@@ -66,12 +67,17 @@ export class AssetsComponent implements OnInit, OnDestroy {
   
   assetForm: FormGroup;
   assignmentForm: FormGroup;
+  newAssignmentForm: FormGroup;
   searchTerm: string = '';
+
+  availableAssets: AssetDto[] = [];
 
   assetStatuses = AssetStatus;
   assetCategories = AssetCategory;
+  assetConditions = AssetCondition;
   statusKeys = Object.keys(AssetStatus).filter(k => isNaN(Number(k))) as Array<keyof typeof AssetStatus>;
   categoryKeys = Object.keys(AssetCategory).filter(k => isNaN(Number(k))) as Array<keyof typeof AssetCategory>;
+  conditionKeys = Object.keys(AssetCondition).filter(k => isNaN(Number(k))) as Array<keyof typeof AssetCondition>;
   Math = Math;
 
   canCreate: boolean = false;
@@ -98,19 +104,28 @@ export class AssetsComponent implements OnInit, OnDestroy {
     this.assetForm = this.fb.group({
       barcode: [''],
       category: [AssetCategory.Laptop, Validators.required],
-      brand: ['', Validators.required],
+      manufacture: ['', Validators.required],
       model: ['', Validators.required],
       serialNumber: [''],
+      operatingSystem: [''],
       description: [''],
+      purpose: [''],
       purchaseDate: [''],
       purchasePrice: [''],
       warrantyExpiry: [''],
       status: [AssetStatus.Available, Validators.required],
-      notes: [''],
-      locationId: [null]
+      condition: [AssetCondition.Good, Validators.required]
     });
 
     this.assignmentForm = this.fb.group({
+      employeeId: ['', Validators.required],
+      locationId: [''],
+      expectedReturnDate: [''],
+      notes: ['']
+    });
+
+    this.newAssignmentForm = this.fb.group({
+      assetId: ['', Validators.required],
       employeeId: ['', Validators.required],
       locationId: [''],
       expectedReturnDate: [''],
@@ -122,6 +137,7 @@ export class AssetsComponent implements OnInit, OnDestroy {
     this.checkPermissions();
     this.loadLocations();
     this.loadEmployees();
+    this.loadAvailableAssets();
     
     this.route.queryParams.subscribe(params => {
       if (params['action'] === 'create') {
@@ -138,11 +154,38 @@ export class AssetsComponent implements OnInit, OnDestroy {
 
   checkPermissions(): void {
     const user = this.authService.getUser();
+    console.log('🔐 Checking permissions - User:', user);
+    
     if (user) {
+      console.log('🔐 User role:', user.role, 'Type:', typeof user.role);
+      
+      // Convert role to number if it's a string
+      let roleValue = user.role;
+      if (typeof user.role === 'string') {
+        // Map string role names to enum values
+        const roleMapping: { [key: string]: UserRole } = {
+          'Viewer': UserRole.Viewer,
+          'ITOfficer': UserRole.ITOfficer,
+          'Admin': UserRole.Admin
+        };
+        roleValue = roleMapping[user.role as string] || UserRole.Viewer;
+        console.log('🔐 Mapped string role to enum value:', user.role, '->', roleValue);
+      }
+      
+      console.log('🔐 Role comparison - roleValue === UserRole.Admin:', roleValue === UserRole.Admin);
+      console.log('🔐 Role comparison - roleValue === UserRole.ITOfficer:', roleValue === UserRole.ITOfficer);
+      
       // ITOfficer (2) and Admin (3) can create/edit/delete
-      this.canCreate = user.role === UserRole.ITOfficer || user.role === UserRole.Admin;
-      this.canEdit = user.role === UserRole.ITOfficer || user.role === UserRole.Admin;
-      this.canDelete = user.role === UserRole.Admin; // Only Admin can delete
+      this.canCreate = roleValue === UserRole.ITOfficer || roleValue === UserRole.Admin;
+      this.canEdit = roleValue === UserRole.ITOfficer || roleValue === UserRole.Admin;
+      this.canDelete = roleValue === UserRole.Admin; // Only Admin can delete
+      
+      console.log('🔐 Permissions set - canCreate:', this.canCreate, 'canEdit:', this.canEdit, 'canDelete:', this.canDelete);
+    } else {
+      console.log('🔐 No user found, setting all permissions to false');
+      this.canCreate = false;
+      this.canEdit = false;
+      this.canDelete = false;
     }
   }
 
@@ -187,6 +230,29 @@ export class AssetsComponent implements OnInit, OnDestroy {
     });
   }
 
+  loadAvailableAssets(): void {
+    this.assetService.getAssets({ page: 1, pageSize: 1000 }).subscribe({
+      next: (assets) => {
+        console.log('🔍 All loaded assets for assignment:', assets);
+        console.log('🔍 First asset status:', assets[0]?.status, 'Type:', typeof assets[0]?.status);
+        
+        // Handle both string and enum status values
+        this.availableAssets = assets.filter(a => {
+          const statusAsString = (a.status as any);
+          const isAvailable = statusAsString === 'Available' || statusAsString === AssetStatus.Available || statusAsString === 1;
+          console.log('🔍 Asset', a.id, 'status:', a.status, 'statusAsString:', statusAsString, 'isAvailable:', isAvailable);
+          return isAvailable;
+        });
+        
+        console.log('✅ Filtered available assets for assignment:', this.availableAssets.length, 'All assets:', assets.length);
+        console.log('✅ Available assets for assignment:', this.availableAssets);
+      },
+      error: (error) => {
+        console.error('❌ Error loading available assets:', error);
+      }
+    });
+  }
+
   onSearch(): void {
     this.searchRequest.searchTerm = this.searchTerm || undefined;
     this.searchRequest.page = 1;
@@ -214,20 +280,70 @@ export class AssetsComponent implements OnInit, OnDestroy {
 
   openEditModal(asset: AssetDto): void {
     this.selectedAsset = asset;
+    console.log('📝 Opening edit modal for asset:', asset);
+    console.log('📝 Asset values - category:', asset.category, 'status:', asset.status, 'condition:', asset.condition);
+    
+    // Create enum mappings for string to number conversion
+    const categoryMapping: { [key: string]: AssetCategory } = {
+      'Laptop': AssetCategory.Laptop,
+      'Monitor': AssetCategory.Monitor,
+      'MobilePhone': AssetCategory.MobilePhone,
+      'Keyboard': AssetCategory.Keyboard,
+      'Mouse': AssetCategory.Mouse,
+      'Headset': AssetCategory.Headset,
+      'Webcam': AssetCategory.Webcam,
+      'Printer': AssetCategory.Printer,
+      'Router': AssetCategory.Router,
+      'Switch': AssetCategory.Switch,
+      'AccessPoint': AssetCategory.AccessPoint,
+      'Tablet': AssetCategory.Tablet,
+      'Other': AssetCategory.Other
+    };
+    
+    const statusMapping: { [key: string]: AssetStatus } = {
+      'Available': AssetStatus.Available,
+      'Assigned': AssetStatus.Assigned,
+      'UnderMaintenance': AssetStatus.UnderMaintenance,
+      'Retired': AssetStatus.Retired,
+      'Lost': AssetStatus.Lost
+    };
+    
+    const conditionMapping: { [key: string]: AssetCondition } = {
+      'VeryBad': AssetCondition.VeryBad,
+      'Bad': AssetCondition.Bad,
+      'Low': AssetCondition.Low,
+      'Good': AssetCondition.Good,
+      'VeryGood': AssetCondition.VeryGood,
+      'New': AssetCondition.New
+    };
+    
+    // Convert enum values from strings to numbers if needed
+    const categoryValue = typeof asset.category === 'string' ? 
+      categoryMapping[asset.category as string] || AssetCategory.Laptop : asset.category;
+    const statusValue = typeof asset.status === 'string' ? 
+      statusMapping[asset.status as string] || AssetStatus.Available : asset.status;
+    const conditionValue = typeof asset.condition === 'string' ? 
+      conditionMapping[asset.condition as string] || AssetCondition.Good : asset.condition;
+    
     this.assetForm.patchValue({
       barcode: asset.barcode || '',
-      category: asset.category,
-      brand: asset.brand,
+      category: categoryValue,
+      manufacture: asset.manufacture,
       model: asset.model,
       serialNumber: asset.serialNumber || '',
+      operatingSystem: asset.operatingSystem || '',
       description: asset.description || '',
+      purpose: asset.purpose || '',
       purchaseDate: asset.purchaseDate ? asset.purchaseDate.split('T')[0] : '',
       purchasePrice: asset.purchasePrice || '',
       warrantyExpiry: asset.warrantyExpiry ? asset.warrantyExpiry.split('T')[0] : '',
-      status: asset.status,
-      notes: asset.notes || '',
-      locationId: asset.location?.id || null
+      status: statusValue,
+      condition: conditionValue
     });
+    
+    console.log('📝 Form values after patch:', this.assetForm.value);
+    console.log('📝 Converted values - category:', categoryValue, 'status:', statusValue, 'condition:', conditionValue);
+    
     this.showEditModal = true;
     this.cdr.markForCheck();
   }
@@ -236,6 +352,21 @@ export class AssetsComponent implements OnInit, OnDestroy {
     this.showEditModal = false;
     this.selectedAsset = undefined;
     this.cdr.markForCheck();
+  }
+
+  onUnassign(asset: AssetDto): void {
+    if (asset.currentAssignment) {
+      this.assignmentService.returnAssignment(asset.currentAssignment.id, {}).subscribe({
+        next: () => {
+          this.loadAssets();
+          this.alertService.success('Asset Unassigned', 'The asset has been successfully unassigned.');
+        },
+        error: (error: any) => {
+          console.error('Error unassigning asset:', error);
+          this.alertService.error('Unassign Failed', 'Failed to unassign asset. Please try again.');
+        }
+      });
+    }
   }
 
   openViewModal(asset: AssetDto): void {
@@ -325,6 +456,65 @@ export class AssetsComponent implements OnInit, OnDestroy {
     }
   }
 
+  openNewAssignmentModal(asset?: AssetDto): void {
+    this.newAssignmentForm.reset();
+    if (asset) {
+      // Pre-select the asset if provided
+      this.newAssignmentForm.patchValue({ assetId: asset.id });
+    }
+    this.showNewAssignmentModal = true;
+    this.loadAvailableAssets(); // Load available assets when modal opens
+    this.cdr.markForCheck();
+  }
+
+  closeNewAssignmentModal(): void {
+    this.showNewAssignmentModal = false;
+    this.cdr.markForCheck();
+  }
+
+  onNewAssignmentSubmit(): void {
+    if (this.newAssignmentForm.valid) {
+      const formValue = this.newAssignmentForm.value;
+      const assignmentRequest: CreateAssignmentRequest = {
+        assetId: parseInt(formValue.assetId),
+        employeeId: parseInt(formValue.employeeId),
+        locationId: formValue.locationId ? parseInt(formValue.locationId) : undefined,
+        expectedReturnDate: formValue.expectedReturnDate || undefined,
+        notes: formValue.notes || undefined
+      };
+
+      this.assignmentService.createAssignment(assignmentRequest).subscribe({
+        next: () => {
+          this.closeNewAssignmentModal();
+          this.loadAssets(); // Refresh the assets list
+          this.loadAvailableAssets(); // Refresh available assets
+          this.alertService.success('Assignment Created', 'The asset has been successfully assigned to the employee.');
+        },
+        error: (error) => {
+          console.error('Error creating assignment:', error);
+          this.alertService.error('Assignment Failed', error.error?.message || 'Failed to create assignment. Please try again.');
+        }
+      });
+    }
+  }
+
+  onUnassignAsset(asset: AssetDto): void {
+    if (!asset.currentAssignment) {
+      this.alertService.error('Unassign Failed', 'This asset is not currently assigned.');
+      return;
+    }
+
+    this.confirmationData = {
+      title: 'Unassign Asset',
+      message: `Are you sure you want to unassign "${asset.manufacture} ${asset.model}" from ${asset.currentAssignment.employeeName}?`,
+      confirmText: 'Unassign',
+      confirmClass: 'bg-orange-600 hover:bg-orange-700',
+      action: 'unassign',
+      data: asset.currentAssignment.id
+    };
+    this.showConfirmationModal = true;
+  }
+
   onCreateSubmit(): void {
     if (this.assetForm.valid) {
       const formValue = this.assetForm.value;
@@ -334,6 +524,8 @@ export class AssetsComponent implements OnInit, OnDestroy {
         purchasePrice: formValue.purchasePrice ? parseFloat(formValue.purchasePrice) : undefined,
         warrantyExpiry: formValue.warrantyExpiry || undefined
       };
+
+      console.log('📤 Sending create request:', JSON.stringify(createRequest, null, 2));
 
       // Debug: Log user info before request
       const user = this.authService.getUser();
@@ -381,8 +573,19 @@ export class AssetsComponent implements OnInit, OnDestroy {
             errorMessage = `403 Forbidden - You are logged in as ${user?.email} with role ${user?.role} (${UserRole[user?.role || 0]}). The backend may require a different role or the token may not be valid.`;
           } else if (error.status === 401) {
             errorMessage = 'Your session has expired. Please log in again.';
+          } else if (error.status === 400 && error.error?.errors) {
+            // Handle FluentValidation errors - they come as an object with field names as keys
+            const validationErrors = error.error.errors;
+            const errorMessages = Object.keys(validationErrors).map(field => {
+              const fieldErrors = validationErrors[field];
+              return `${field}: ${Array.isArray(fieldErrors) ? fieldErrors.join(', ') : fieldErrors}`;
+            });
+            errorMessage = 'Validation failed:\n' + errorMessages.join('\n');
+            console.error('Validation errors:', validationErrors);
           } else if (error.error?.message) {
             errorMessage = error.error.message;
+          } else if (error.error?.title) {
+            errorMessage = error.error.title;
           }
           
           this.alertService.error('Asset Creation Failed', errorMessage);
@@ -401,8 +604,7 @@ export class AssetsComponent implements OnInit, OnDestroy {
         warrantyExpiry: formValue.warrantyExpiry || undefined,
         barcode: formValue.barcode || undefined,
         serialNumber: formValue.serialNumber || undefined,
-        description: formValue.description || undefined,
-        notes: formValue.notes || undefined
+        description: formValue.description || undefined
       };
 
       this.assetService.updateAsset(this.selectedAsset.id, updateRequest).subscribe({
@@ -424,34 +626,49 @@ export class AssetsComponent implements OnInit, OnDestroy {
     this.confirmationData = {
       type: 'danger' as const,
       title: 'Delete Asset',
-      message: `Are you sure you want to delete asset ${asset.assetId}?`,
-      subtitle: 'This action cannot be undone.'
+      message: `Are you sure you want to delete asset ${asset.manufacture} ${asset.model} (ID: ${asset.id})?`,
+      subtitle: 'This action cannot be undone.',
+      action: 'delete'
     };
     this.showConfirmationModal = true;
     this.cdr.markForCheck();
   }
 
   onConfirmationConfirmed(): void {
-    if (this.assetToDelete) {
+    if (this.confirmationData.action === 'delete' && this.assetToDelete) {
       this.assetService.deleteAsset(this.assetToDelete.id).subscribe({
         next: () => {
           this.loadAssets();
-          this.alertService.success('Asset Deleted', `Asset ${this.assetToDelete!.assetId} has been successfully deleted.`);
+          this.alertService.success('Asset Deleted', `Asset ${this.assetToDelete!.manufacture} ${this.assetToDelete!.model} has been successfully deleted.`);
         },
         error: (error) => {
           console.error('Error deleting asset:', error);
           this.alertService.error('Delete Failed', error.error?.message || 'Failed to delete asset. Please try again.');
         }
       });
+    } else if (this.confirmationData.action === 'unassign') {
+      const assignmentId = this.confirmationData.data;
+      this.assignmentService.returnAssignment(assignmentId, {}).subscribe({
+        next: () => {
+          this.loadAssets();
+          this.alertService.success('Asset Unassigned', 'The asset has been successfully unassigned.');
+        },
+        error: (error: any) => {
+          console.error('Error unassigning asset:', error);
+          this.alertService.error('Unassign Failed', error.error?.message || 'Failed to unassign asset. Please try again.');
+        }
+      });
     }
     this.showConfirmationModal = false;
     this.assetToDelete = undefined;
+    this.confirmationData = {};
     this.cdr.markForCheck();
   }
 
   onConfirmationCancelled(): void {
     this.showConfirmationModal = false;
     this.assetToDelete = undefined;
+    this.confirmationData = {};
     this.cdr.markForCheck();
   }
 
@@ -460,7 +677,20 @@ export class AssetsComponent implements OnInit, OnDestroy {
     this.loadAssets();
   }
 
-  getStatusClass(status: AssetStatus): string {
+  getStatusClass(status: AssetStatus | string): string {
+    // Handle string values from API
+    if (typeof status === 'string') {
+      const stringStatusMap: { [key: string]: string } = {
+        'Available': 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
+        'Assigned': 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400',
+        'UnderMaintenance': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
+        'Retired': 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400',
+        'Lost': 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+      };
+      return stringStatusMap[status] || 'bg-gray-100 text-gray-800';
+    }
+    
+    // Handle enum values
     const statusMap: { [key: number]: string } = {
       [AssetStatus.Available]: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
       [AssetStatus.Assigned]: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400',
@@ -471,12 +701,47 @@ export class AssetsComponent implements OnInit, OnDestroy {
     return statusMap[status] || '';
   }
 
-  getCategoryName(category: AssetCategory): string {
+  getCategoryName(category: AssetCategory | string): string {
+    if (typeof category === 'string') {
+      return category; // Return the string directly if it's already a string
+    }
     return AssetCategory[category] || 'Other';
   }
 
-  getStatusName(status: AssetStatus): string {
+  getStatusName(status: AssetStatus | string): string {
+    if (typeof status === 'string') {
+      return status; // Return the string directly if it's already a string
+    }
     return AssetStatus[status] || 'Unknown';
+  }
+
+  getConditionName(condition: AssetCondition | string): string {
+    if (typeof condition === 'string') {
+      return condition; // Return the string directly if it's already a string
+    }
+    return AssetCondition[condition] || 'Unknown';
+  }
+
+  isAssetAvailable(asset: AssetDto): boolean {
+    const status = asset.status as any;
+    return status === 'Available' || status === AssetStatus.Available || status === 1;
+  }
+
+  isAssetAssigned(asset: AssetDto): boolean {
+    const status = asset.status as any;
+    return status === 'Assigned' || status === AssetStatus.Assigned || status === 2;
+  }
+
+  getConditionClass(condition: AssetCondition): string {
+    const conditionMap: { [key: number]: string } = {
+      [AssetCondition.New]: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400',
+      [AssetCondition.VeryGood]: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
+      [AssetCondition.Good]: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400',
+      [AssetCondition.Low]: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
+      [AssetCondition.Bad]: 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400',
+      [AssetCondition.VeryBad]: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+    };
+    return conditionMap[condition] || '';
   }
 
   getTimelineStatusClass(status: AssetTimelineStatus): string {

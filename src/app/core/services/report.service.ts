@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { DashboardSummaryDto } from '../models/report.models';
+import { DashboardSummaryDto, MonthlyTrendDto } from '../models/report.models';
 import { AssetDto } from '../models/asset.models';
 import { AuditLog } from '../models/audit.models';
 
@@ -43,6 +43,11 @@ export class ReportService {
     params = params.set('pageSize', pageSize.toString());
 
     return this.http.get<AuditLog[]>(`${this.apiUrl}/audit-logs`, { params });
+  }
+
+  getMonthlyTrends(months: number = 6): Observable<MonthlyTrendDto[]> {
+    const params = new HttpParams().set('months', months.toString());
+    return this.http.get<MonthlyTrendDto[]>(`${this.apiUrl}/trends/monthly`, { params });
   }
 }
 

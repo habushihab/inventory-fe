@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { AlertService } from '../../core/services/alert.service';
@@ -9,20 +9,25 @@ import { Alert, AlertType } from '../../core/models/alert.models';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './alerts.component.html',
-  styleUrl: './alerts.component.scss'
+  styleUrl: './alerts.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AlertsComponent implements OnInit, OnDestroy {
   alerts: Alert[] = [];
   private subscription: Subscription = new Subscription();
-  
+
   AlertType = AlertType;
 
-  constructor(private alertService: AlertService) {}
+  constructor(
+    private alertService: AlertService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.subscription.add(
       this.alertService.getAlerts().subscribe(alerts => {
         this.alerts = alerts;
+        this.cdr.markForCheck();
       })
     );
   }

@@ -51,48 +51,53 @@
           <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark p-4 sm:p-6 shadow-sm flex flex-col justify-between h-28 sm:h-32 relative overflow-hidden group">
             <div class="flex items-start justify-between z-10">
               <div>
-                <p class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Utilization Rate</p>
-                <p class="mt-1 sm:mt-2 text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{{ getUtilizationRate() }}%</p>
+                <p class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Available Assets</p>
+                <p class="mt-1 sm:mt-2 text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{{ getAvailableAssets().toLocaleString() }}</p>
               </div>
-              <div class="p-1.5 sm:p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg text-indigo-600 dark:text-indigo-400">
-                <span class="material-symbols-outlined text-[18px] sm:text-[20px]">pie_chart</span>
+              <div class="p-1.5 sm:p-2 bg-green-50 dark:bg-green-900/20 rounded-lg text-green-600 dark:text-green-400">
+                <span class="material-symbols-outlined text-[18px] sm:text-[20px]">check_circle</span>
               </div>
             </div>
-            <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5 mt-auto z-10">
-              <div class="bg-indigo-600 h-1.5 rounded-full" [style.width.%]="getUtilizationRate()"></div>
+            <div class="flex items-center gap-1 mt-2 z-10">
+              <span class="text-xs font-medium text-green-600 dark:text-green-400">{{ getUtilizationRate() }}% utilization rate</span>
             </div>
+            <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-green-500/5 rounded-full group-hover:bg-green-500/10 transition-colors"></div>
           </div>
 
           <!-- Stat Card 3 -->
           <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark p-4 sm:p-6 shadow-sm flex flex-col justify-between h-28 sm:h-32 relative overflow-hidden group">
             <div class="flex items-start justify-between z-10">
               <div>
-                <p class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Pending Returns</p>
-                <p class="mt-1 sm:mt-2 text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{{ getPendingReturns() }}</p>
+                <p class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Assigned Assets</p>
+                <p class="mt-1 sm:mt-2 text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{{ getAssignedAssets().toLocaleString() }}</p>
               </div>
-              <div class="p-1.5 sm:p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg text-orange-600 dark:text-orange-400">
-                <span class="material-symbols-outlined text-[18px] sm:text-[20px]">pending_actions</span>
+              <div class="p-1.5 sm:p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-blue-600 dark:text-blue-400">
+                <span class="material-symbols-outlined text-[18px] sm:text-[20px]">assignment_ind</span>
               </div>
             </div>
             <div class="flex items-center gap-1 mt-2 z-10">
-              <span class="text-xs font-medium text-orange-600 dark:text-orange-400">4 overdue items</span>
+              <span class="text-xs font-medium text-orange-600 dark:text-orange-400" *ngIf="getPendingReturns() > 0">{{ getPendingReturns() }} overdue returns</span>
+              <span class="text-xs font-medium text-green-600 dark:text-green-400" *ngIf="getPendingReturns() === 0">All on time</span>
             </div>
+            <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/5 rounded-full group-hover:bg-blue-500/10 transition-colors"></div>
           </div>
 
           <!-- Stat Card 4 -->
           <div class="rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark p-4 sm:p-6 shadow-sm flex flex-col justify-between h-28 sm:h-32 relative overflow-hidden group">
             <div class="flex items-start justify-between z-10">
               <div>
-                <p class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Low Stock Alerts</p>
-                <p class="mt-1 sm:mt-2 text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{{ getLowStockAlerts() }}</p>
+                <p class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">Warranty Expiring</p>
+                <p class="mt-1 sm:mt-2 text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">{{ getWarrantyExpiringAssets() }}</p>
               </div>
               <div class="p-1.5 sm:p-2 bg-red-50 dark:bg-red-900/20 rounded-lg text-red-600 dark:text-red-400">
-                <span class="material-symbols-outlined text-[18px] sm:text-[20px]">warning</span>
+                <span class="material-symbols-outlined text-[18px] sm:text-[20px]">schedule</span>
               </div>
             </div>
             <div class="flex items-center gap-1 mt-2 z-10">
-              <span class="text-xs font-medium text-red-600 dark:text-red-400">Action required</span>
+              <span class="text-xs font-medium text-red-600 dark:text-red-400" *ngIf="getWarrantyExpiringAssets() > 0">Next 30 days</span>
+              <span class="text-xs font-medium text-green-600 dark:text-green-400" *ngIf="getWarrantyExpiringAssets() === 0">All current</span>
             </div>
+            <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-red-500/5 rounded-full group-hover:bg-red-500/10 transition-colors"></div>
           </div>
         </div>
 
@@ -101,36 +106,53 @@
           <!-- Chart Section (Takes up 2/3) -->
           <div class="lg:col-span-2 flex flex-col rounded-xl border border-slate-200 dark:border-slate-800 bg-surface-light dark:bg-surface-dark shadow-sm">
             <div class="p-4 sm:p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center gap-4">
-              <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Asset Valuation by Department</h3>
+              <div>
+                <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Assets Distribution</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">By department assignments and categories</p>
+              </div>
               <button 
                 type="button"
                 (click)="onViewReport()"
                 class="text-xs sm:text-sm text-primary font-medium hover:underline whitespace-nowrap">View Report</button>
             </div>
             <div class="p-4 sm:p-6 flex-1 flex flex-col justify-end min-h-[280px] sm:min-h-[320px]">
+              <!-- Tabs for switching between views -->
+              <div class="flex gap-2 mb-4">
+                <button 
+                  (click)="setChartView('department')" 
+                  [class]="'px-3 py-1 text-xs font-medium rounded transition-colors ' + (chartView === 'department' ? 'bg-primary text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300')">
+                  By Department
+                </button>
+                <button 
+                  (click)="setChartView('category')" 
+                  [class]="'px-3 py-1 text-xs font-medium rounded transition-colors ' + (chartView === 'category' ? 'bg-primary text-white' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300')">
+                  By Category
+                </button>
+              </div>
+
               <!-- CSS-only Bar Chart Simulation -->
               <div class="flex items-end justify-between gap-2 sm:gap-4 h-48 sm:h-64 w-full">
                 <!-- Y-Axis Labels (Visual Only) -->
                 <div class="flex flex-col justify-between h-full text-xs text-slate-400 font-medium pb-6">
-                  <span>$100k</span>
-                  <span>$75k</span>
-                  <span>$50k</span>
-                  <span>$25k</span>
+                  <span>{{ getMaxChartValue() }}</span>
+                  <span>{{ Math.floor(getMaxChartValue() * 0.75) }}</span>
+                  <span>{{ Math.floor(getMaxChartValue() * 0.5) }}</span>
+                  <span>{{ Math.floor(getMaxChartValue() * 0.25) }}</span>
                   <span>0</span>
                 </div>
 
                 <!-- Bars -->
                 <div class="flex flex-1 items-end justify-around h-full gap-1 sm:gap-2 border-l border-b border-slate-100 dark:border-slate-700 pb-2 pl-2">
-                  <div *ngFor="let dept of getAssetValuationByDepartment(); let i = index" class="flex flex-col items-center gap-1 sm:gap-2 group w-full">
+                  <div *ngFor="let item of getCurrentChartData(); let i = index" class="flex flex-col items-center gap-1 sm:gap-2 group w-full">
                     <div 
                       class="w-8 sm:w-12 bg-primary/80 group-hover:bg-primary rounded-t-sm transition-all relative" 
-                      [style.height.%]="(dept.count / (dashboardData?.totalAssets || 1)) * 100"
+                      [style.height.%]="getChartItemHeight(item.count)"
                     >
-                      <div class="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded transition-opacity">{{ dept.count }}</div>
+                      <div class="opacity-0 group-hover:opacity-100 absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded transition-opacity whitespace-nowrap">{{ item.count }} assets</div>
                     </div>
-                    <span class="text-xs text-slate-500 font-medium">{{ dept.department.length > 4 ? (dept.department.substring(0, 4)) : dept.department }}</span>
+                    <span class="text-xs text-slate-500 font-medium text-center">{{ getChartItemLabel(item) }}</span>
                   </div>
-                  <div *ngIf="getAssetValuationByDepartment().length === 0" class="flex items-center justify-center h-full text-slate-400 text-sm">
+                  <div *ngIf="getCurrentChartData().length === 0" class="flex items-center justify-center h-full text-slate-400 text-sm">
                     No data available
                   </div>
                 </div>

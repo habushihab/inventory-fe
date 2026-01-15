@@ -54,7 +54,6 @@ export class EmployeesComponent implements OnInit {
     private fb: FormBuilder
   ) {
     this.employeeForm = this.fb.group({
-      employeeId: ['', Validators.required],
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
@@ -136,7 +135,6 @@ export class EmployeesComponent implements OnInit {
   openEditModal(employee: EmployeeDto): void {
     this.selectedEmployee = employee;
     this.employeeForm.patchValue({
-      employeeId: employee.employeeId,
       firstName: employee.firstName,
       lastName: employee.lastName,
       email: employee.email,

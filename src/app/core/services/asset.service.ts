@@ -19,8 +19,7 @@ export class AssetService {
       if (request.searchTerm) params = params.set('searchTerm', request.searchTerm);
       if (request.category) params = params.set('category', request.category.toString());
       if (request.status) params = params.set('status', request.status.toString());
-      if (request.brand) params = params.set('brand', request.brand);
-      if (request.locationId) params = params.set('locationId', request.locationId.toString());
+      if (request.manufacture) params = params.set('manufacture', request.manufacture);
       if (request.employeeId) params = params.set('employeeId', request.employeeId.toString());
       if (request.hasWarrantyExpiring) params = params.set('hasWarrantyExpiring', request.hasWarrantyExpiring.toString());
       params = params.set('page', (request.page || 1).toString());

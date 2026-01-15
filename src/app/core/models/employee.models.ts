@@ -19,7 +19,6 @@ export interface EmployeeDto {
 }
 
 export interface CreateEmployeeRequest {
-  employeeId: string;
   firstName: string;
   lastName: string;
   email: string;

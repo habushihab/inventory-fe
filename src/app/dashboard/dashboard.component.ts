@@ -30,6 +30,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // Loading state
   isLoading = true;
 
+  // Chart view state
+  chartView: 'department' | 'category' = 'department';
+
   constructor(
     private readonly router: Router,
     private readonly authService: AuthService,
@@ -110,6 +113,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return this.dashboardData?.totalAssets || 0;
   }
 
+  getAvailableAssets(): number {
+    return this.dashboardData?.availableAssets || 0;
+  }
+
+  getAssignedAssets(): number {
+    return this.dashboardData?.assignedAssets || 0;
+  }
+
   getUtilizationRate(): number {
     if (!this.dashboardData || this.dashboardData.totalAssets === 0) return 0;
     return Math.round((this.dashboardData.assignedAssets / this.dashboardData.totalAssets) * 100);
@@ -119,13 +130,50 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return this.dashboardData?.overdueAssets || 0;
   }
 
-  getLowStockAlerts(): number {
+  getWarrantyExpiringAssets(): number {
     return this.dashboardData?.warrantyExpiringAssets || 0;
   }
 
   getAssetValuationByDepartment(): any[] {
     return this.dashboardData?.assetsByDepartment || [];
   }
+
+  getAssetsByCategory(): any[] {
+    return this.dashboardData?.assetsByCategory || [];
+  }
+
+  // Chart helper methods
+  setChartView(view: 'department' | 'category'): void {
+    this.chartView = view;
+    this.cdr.markForCheck();
+  }
+
+  getCurrentChartData(): any[] {
+    return this.chartView === 'department' 
+      ? this.getAssetValuationByDepartment() 
+      : this.getAssetsByCategory();
+  }
+
+  getMaxChartValue(): number {
+    const data = this.getCurrentChartData();
+    if (data.length === 0) return 100;
+    const max = Math.max(...data.map(item => item.count));
+    return Math.ceil(max / 10) * 10; // Round to nearest 10
+  }
+
+  getChartItemHeight(count: number): number {
+    const max = this.getMaxChartValue();
+    if (max === 0) return 0;
+    return (count / max) * 100;
+  }
+
+  getChartItemLabel(item: any): string {
+    const label = item.department || item.category || 'Unknown';
+    return label.length > 8 ? label.substring(0, 8) + '...' : label;
+  }
+
+  // Add Math to template context
+  Math = Math;
 
   formatTimeAgo(date: string): string {
     const now = new Date();

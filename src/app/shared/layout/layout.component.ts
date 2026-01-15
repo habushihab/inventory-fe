@@ -122,8 +122,21 @@ export class LayoutComponent implements OnInit, OnDestroy {
   }
 
   getRoleName(): string {
-    if (!this.currentUser?.role) return 'User';
-    return UserRole[this.currentUser.role] || 'User';
+    if (!this.currentUser) return 'User';
+    const role = this.currentUser.role as unknown as string | number;
+    switch (role) {
+      case UserRole.Admin:
+      case 'Admin':
+        return 'Administrator';
+      case UserRole.ITOfficer:
+      case 'ITOfficer':
+        return 'IT Officer';
+      case UserRole.Viewer:
+      case 'Viewer':
+        return 'Viewer';
+      default:
+        return 'User';
+    }
   }
 
   getSearchPlaceholder(): string {

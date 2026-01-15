@@ -159,18 +159,6 @@
       <form [formGroup]="employeeForm" (ngSubmit)="onCreateSubmit()" class="p-6 space-y-4">
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Employee ID</label>
-            <input type="text" formControlName="employeeId" required
-              class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Department</label>
-            <input type="text" formControlName="department" required
-              class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">First Name</label>
             <input type="text" formControlName="firstName" required
               class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
@@ -180,6 +168,11 @@
             <input type="text" formControlName="lastName" required
               class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
           </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Department</label>
+          <input type="text" formControlName="department" required
+            class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
         </div>
         <div>
           <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
@@ -235,18 +228,6 @@
       <form [formGroup]="employeeForm" (ngSubmit)="onEditSubmit()" class="p-6 space-y-4">
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Employee ID</label>
-            <input type="text" formControlName="employeeId" required
-              class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Department</label>
-            <input type="text" formControlName="department" required
-              class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
             <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">First Name</label>
             <input type="text" formControlName="firstName" required
               class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
@@ -256,6 +237,11 @@
             <input type="text" formControlName="lastName" required
               class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
           </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Department</label>
+          <input type="text" formControlName="department" required
+            class="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-2 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20">
         </div>
         <div>
           <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>

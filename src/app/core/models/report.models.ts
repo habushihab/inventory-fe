@@ -29,3 +29,12 @@ export interface AssetsByCategoryDto {
   count: number;
 }
 
+export interface MonthlyTrendDto {
+  year: number;
+  month: number;
+  monthName: string;
+  assetsCreated: number;
+  assetsAssigned: number;
+  assetsReturned: number;
+}
+
